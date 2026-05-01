@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
-import { Card, Button, Badge, Input, Dialog } from '../components/ui';
-import { Plus, Search, ExternalLink, MoreVertical, Globe, Trash2, AlertCircle } from 'lucide-react';
-import { projects } from '../lib/data';
+import React, { useEffect, useState } from 'react';
+import { Card, Button, Badge, Input, Dialog } from '../../../components/ui';
+import { Plus, Search, ExternalLink, Globe, Trash2, AlertCircle } from 'lucide-react';
+import { projects } from '../../../lib/data';
 import { motion } from 'motion/react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 export const Projects: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<any>(null);
@@ -16,6 +17,22 @@ export const Projects: React.FC = () => {
     project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     project.domain.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  useEffect(() => {
+    if (searchParams.get('addProject') === 'true') {
+      setIsAddOpen(true);
+    }
+  }, [searchParams]);
+
+  const closeAddProject = () => {
+    setIsAddOpen(false);
+
+    if (searchParams.has('addProject')) {
+      const nextSearchParams = new URLSearchParams(searchParams);
+      nextSearchParams.delete('addProject');
+      setSearchParams(nextSearchParams, { replace: true });
+    }
+  };
 
   const handleDeleteClick = (project: any) => {
     setSelectedProject(project);
@@ -42,7 +59,7 @@ export const Projects: React.FC = () => {
       </div>
 
       {/* Add Project Dialog */}
-      <Dialog isOpen={isAddOpen} onClose={() => setIsAddOpen(false)} title="Register New Project">
+      <Dialog isOpen={isAddOpen} onClose={closeAddProject} title="Register New Project">
         <div className="space-y-4">
           <div className="space-y-1.5">
             <label className="text-[10px] md:text-[11px] font-bold uppercase tracking-widest text-neutral-400">Project Name</label>
@@ -52,7 +69,7 @@ export const Projects: React.FC = () => {
             <label className="text-[10px] md:text-[11px] font-bold uppercase tracking-widest text-neutral-400">Domain</label>
             <Input placeholder="example.com" />
           </div>
-          <Button className="w-full mt-4" onClick={() => setIsAddOpen(false)}>Add Project</Button>
+          <Button className="w-full mt-4" onClick={closeAddProject}>Add Project</Button>
         </div>
       </Dialog>
 

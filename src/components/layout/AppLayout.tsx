@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import React, { useEffect, useRef, useState } from 'react';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   BarChart3, 
-  Layout, 
   Settings, 
   Zap, 
   Terminal, 
@@ -36,7 +35,9 @@ export const AppLayout: React.FC = () => {
   const [isProjectDropdownOpen, setIsProjectDropdownOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState("viewcontrol-landing.com");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
+  const navigate = useNavigate();
 
   const projects = [
     "viewcontrol-landing.com",
@@ -44,9 +45,15 @@ export const AppLayout: React.FC = () => {
     "marketing.site.io"
   ];
 
-  const activePageName = sidebarLinks.find(link => 
-    link.path === '/' ? location.pathname === '/' : location.pathname.startsWith(link.path)
-  )?.name || 'Dashboard';
+  useEffect(() => {
+    scrollContainerRef.current?.scrollTo({ top: 0, left: 0 });
+    window.scrollTo({ top: 0, left: 0 });
+  }, [location.pathname]);
+
+  const handleAddProject = () => {
+    setIsProjectDropdownOpen(false);
+    navigate('/projects?addProject=true');
+  };
 
   return (
     <div className="flex h-screen bg-white overflow-hidden">
@@ -65,7 +72,7 @@ export const AppLayout: React.FC = () => {
               className="pl-10 h-14 text-base" 
             />
           </div>
-          <div className="space-y-1 max-h-[300px] overflow-y-auto">
+          <div className="space-y-1 max-h-75 overflow-y-auto">
              <div className="px-2 py-2 text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Available Actions</div>
              {sidebarLinks.map(link => (
                <NavLink 
@@ -86,7 +93,7 @@ export const AppLayout: React.FC = () => {
       </Dialog>
 
       {/* Sidebar - Desktop */}
-      <aside className="hidden md:flex w-[240px] flex-col border-r border-border h-screen py-6 px-4">
+      <aside className="hidden md:flex w-60 flex-col border-r border-border h-screen py-6 px-4">
         <div className="flex items-center gap-2 mb-8 px-2">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-black">
             <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/><path d="M3 9h18"/>
@@ -111,19 +118,6 @@ export const AppLayout: React.FC = () => {
             </NavLink>
           ))}
           
-          <div className="mt-8 mb-2 px-3 text-[10px] uppercase tracking-widest text-neutral-400 font-bold">System</div>
-          <NavLink to="/install" className={({ isActive }) => cn(
-                "flex items-center gap-3 px-3 py-2 rounded-md font-medium transition-all duration-200 text-[13px]",
-                isActive ? "bg-black text-white" : "text-neutral-500 hover:bg-neutral-50"
-          )}>
-            <Code2 size={16} /> Install
-          </NavLink>
-          <NavLink to="/settings" className={({ isActive }) => cn(
-                "flex items-center gap-3 px-3 py-2 rounded-md font-medium transition-all duration-200 text-[13px]",
-                isActive ? "bg-black text-white" : "text-neutral-500 hover:bg-neutral-50"
-          )}>
-            <Settings size={16} /> Settings
-          </NavLink>
         </nav>
       </aside>
 
@@ -226,7 +220,10 @@ export const AppLayout: React.FC = () => {
                              {p}
                            </button>
                          ))}
-                         <button className="w-full text-left px-3 py-2 text-[13px] hover:bg-neutral-50 rounded-md border-t border-border mt-1 pt-2 text-neutral-400">
+                         <button
+                           onClick={handleAddProject}
+                           className="w-full text-left px-3 py-2 text-[13px] hover:bg-neutral-50 rounded-md border-t border-border mt-1 pt-2 text-neutral-400"
+                         >
                            + Add Project
                          </button>
                        </div>
@@ -234,11 +231,6 @@ export const AppLayout: React.FC = () => {
                    </>
                  )}
                </AnimatePresence>
-               
-               <div className="hidden lg:flex items-center gap-2 ml-4 px-2 py-0.5 bg-neutral-50 border border-border rounded-full text-[11px] font-bold shrink-0">
-                 <div className="w-1.5 h-1.5 rounded-full bg-black"></div>
-                 <span className="text-black">Live & Connected</span>
-               </div>
             </div>
           </div>
 
@@ -255,7 +247,7 @@ export const AppLayout: React.FC = () => {
           </div>
         </header>
 
-        <div className="flex-1 p-4 md:p-8 overflow-y-auto">
+        <div ref={scrollContainerRef} className="flex-1 p-4 md:p-8 overflow-y-auto">
           <div className="max-w-7xl mx-auto">
             <Outlet />
           </div>

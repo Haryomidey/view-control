@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Card, Button, Input, Switch, Badge, Dialog } from '../components/ui';
-import { cn } from '../lib/utils';
+import { Card, Button, Input, Switch, Badge, Dialog } from '../../../components/ui';
+import { cn } from '../../../lib/utils';
 import { 
   Zap, 
   ChevronRight, 
@@ -13,7 +13,7 @@ import {
   Save,
   Play
 } from 'lucide-react';
-import { projects } from '../lib/data';
+import { projects } from '../../../lib/data';
 import { motion } from 'motion/react';
 
 export const Controls: React.FC = () => {
@@ -166,7 +166,7 @@ export const Controls: React.FC = () => {
               </button>
             </div>
 
-            <Card className="min-h-[400px] flex flex-col p-0">
+            <Card className="min-h-100 flex flex-col p-0">
                <div className="bg-neutral-50 border-b border-border p-3 flex items-center gap-2">
                   <div className="flex gap-1.5">
                     <div className="w-2.5 h-2.5 rounded-full bg-neutral-200" />
@@ -180,7 +180,7 @@ export const Controls: React.FC = () => {
                
                <div className="flex-1 p-8 bg-neutral-50/30 flex flex-col items-center justify-center text-center space-y-4 relative overflow-hidden">
                   {/* Mock Website Elements */}
-                  <div className="w-full max-w-[240px] space-y-4">
+                  <div className="w-full max-w-60 space-y-4">
                     <div className="h-4 w-3/4 bg-neutral-200 rounded mx-auto" />
                     <div className="h-8 w-full bg-black rounded" id="sim-hero" />
                     <div className="h-3 w-1/2 bg-neutral-200 rounded mx-auto" />

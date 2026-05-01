@@ -1,16 +1,10 @@
 import React, { useState } from 'react';
-import { Card, Button, Badge } from '../components/ui';
+import { Card, Button } from '../../../components/ui';
 import { 
-  Code2, 
   Terminal, 
-  Copy, 
-  Check, 
-  ChevronRight, 
   Layers, 
-  ExternalLink,
   ShieldCheck
 } from 'lucide-react';
-import { motion } from 'motion/react';
 
 const CodeSnippet = ({ code, language }: { code: string, language: string }) => {
   const [copied, setCopied] = useState(false);
@@ -107,17 +101,6 @@ export const Install: React.FC = () => {
               </div>
            </div>
         </Card>
-
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-4 pt-6 grayscale opacity-40">
-           <span className="text-[10px] font-bold uppercase tracking-widest block w-full sm:w-auto">Works with</span>
-           <div className="flex flex-wrap gap-4">
-              <span className="text-[11px] md:text-xs font-bold">React</span>
-              <span className="text-[11px] md:text-xs font-bold">Next.js</span>
-              <span className="text-[11px] md:text-xs font-bold">Vue</span>
-              <span className="text-[11px] md:text-xs font-bold">Webflow</span>
-              <span className="text-[11px] md:text-xs font-bold">Shopify</span>
-           </div>
-        </div>
       </div>
     </div>
   );

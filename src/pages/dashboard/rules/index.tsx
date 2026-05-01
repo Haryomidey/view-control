@@ -1,8 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Card, Button, Input, Switch, Badge } from '../components/ui';
+import { Card, Button, Input, Switch, Badge } from '../../../components/ui';
 import { Search, Filter, MoreHorizontal, Terminal, Zap, Layers, Type, EyeOff } from 'lucide-react';
-import { rules } from '../lib/data';
+import { rules } from '../../../lib/data';
 import { motion } from 'motion/react';
 
 const ActionIcon = ({ type }: { type: string }) => {
@@ -52,7 +52,7 @@ export const Rules: React.FC = () => {
 
       <div className="border border-border rounded-lg overflow-hidden bg-white">
         <div className="overflow-x-auto scrollbar-hide">
-          <table className="w-full text-left border-collapse min-w-[700px]">
+          <table className="w-full text-left border-collapse min-w-175">
             <thead>
               <tr className="border-b border-border bg-neutral-50/30">
                 <th className="px-4 md:px-5 py-3 text-[10px] md:text-[11px] font-bold uppercase tracking-widest text-[#666]">Selector</th>

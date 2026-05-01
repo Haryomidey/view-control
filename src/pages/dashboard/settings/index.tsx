@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, Button, Input, Switch, Badge } from '../components/ui';
+import { Card, Button, Input, Switch, Badge } from '../../../components/ui';
 import { 
   User, 
   Lock, 

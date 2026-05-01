@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, Button, Badge, Input } from '../components/ui';
+import { Card, Button, Badge, Input } from '../../../components/ui';
 import { 
   Zap, 
   Bell, 
@@ -10,7 +10,7 @@ import {
   Terminal,
   Calendar
 } from 'lucide-react';
-import { activities } from '../lib/data';
+import { activities } from '../../../lib/data';
 import { motion } from 'motion/react';
 
 const ActivityIcon = ({ type }: { type: string }) => {

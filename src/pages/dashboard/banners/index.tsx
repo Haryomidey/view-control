@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Card, Button, Input, Switch, Badge, Dialog } from '../components/ui';
+import { Card, Button, Input, Switch, Badge, Dialog } from '../../../components/ui';
 import { Search, Bell, Monitor, Smartphone, Plus, ArrowRight, MessageSquare, Layout } from 'lucide-react';
-import { banners } from '../lib/data';
+import { banners } from '../../../lib/data';
 import { motion } from 'motion/react';
 
 export const Banners: React.FC = () => {
@@ -124,7 +124,7 @@ export const Banners: React.FC = () => {
               </div>
            </div>
 
-           <div className="flex-1 bg-neutral-100 rounded-xl border border-border p-4 md:p-12 min-h-[400px] md:min-h-[500px] flex flex-col relative overflow-hidden">
+           <div className="flex-1 bg-neutral-100 rounded-xl border border-border p-4 md:p-12 min-h-100 md:min-h-125 flex flex-col relative overflow-hidden">
               <div className="w-full h-full bg-white rounded-lg border border-border shadow-premium flex flex-col relative">
                 {/* Browser UI */}
                 <div className="p-2 md:p-3 border-b border-border flex items-center gap-2 md:gap-3">

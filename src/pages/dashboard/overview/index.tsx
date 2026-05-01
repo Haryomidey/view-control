@@ -1,9 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Card, Button, Badge } from '../components/ui';
-import { ArrowUpRight, Plus, ExternalLink, Globe, Zap, Bell, Terminal } from 'lucide-react';
+import { Card, Button } from '../../../components/ui';
+import { ArrowUpRight, Globe, Zap, Terminal } from 'lucide-react';
 import { motion } from 'motion/react';
-import { activities } from '../lib/data';
+import { activities } from '../../../lib/data';
 
 const StatCard = ({ title, value, change, icon: Icon }: any) => (
   <Card className="flex flex-col gap-1 border-border">
@@ -49,7 +49,7 @@ export const Overview: React.FC = () => {
                   key={activity.id} 
                   className="px-4 py-3 md:px-6 md:py-4 flex items-start gap-3 md:gap-4 hover:bg-neutral-50 transition-colors"
                 >
-                  <div className="w-1.5 h-1.5 rounded-full bg-black mt-2 flex-shrink-0" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-black mt-2 shrink-0" />
                   <div className="flex-1 min-w-0">
                     <p className="text-[12px] md:text-[13px] font-medium leading-tight">{activity.message}</p>
                     <p className="text-[10px] md:text-[11px] text-neutral-400 mt-1">
@@ -84,24 +84,8 @@ export const Overview: React.FC = () => {
                 <code className="text-[11px] md:text-[12px] block text-neutral-800 font-mono">npm install viewcontrol</code>
              </div>
           </div>
-          
-          <div className="pt-6 border-t border-border">
-             <h3 className="text-[12px] md:text-[13px] font-bold mb-4 uppercase tracking-widest text-neutral-400">Status Report</h3>
-             <div className="grid grid-cols-2 lg:grid-cols-1 gap-4">
-                <div className="flex justify-between text-[12px] md:text-[13px]">
-                   <span className="text-neutral-500">API Health</span>
-                   <span className="font-semibold">99.98%</span>
-                </div>
-                <div className="flex justify-between text-[12px] md:text-[13px]">
-                   <span className="text-neutral-500">Avg Latency</span>
-                   <span className="font-semibold">12ms</span>
-                </div>
-             </div>
-          </div>
         </div>
       </div>
     </div>
   );
 };
-
-const Code2 = ({ ...props }) => <Terminal {...props} />;

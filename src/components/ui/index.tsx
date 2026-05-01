@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { cn } from '../../lib/utils';
 import { motion } from 'motion/react';
 
@@ -100,12 +101,12 @@ export const Switch: React.FC<{ checked?: boolean; onChange?: (checked: boolean)
           onChange={(e) => onChange?.(e.target.checked)} 
         />
         <div className={cn(
-          "block w-8 h-[18px] rounded-full transition-colors duration-200 transition-all",
+          "block w-8 h-4.5 rounded-full duration-200 transition-all",
           checked ? "bg-black" : "bg-neutral-200"
         )}></div>
         <div className={cn(
-          "absolute top-[2px] bg-white w-3.5 h-3.5 rounded-full transition-all duration-200 shadow-sm",
-          checked ? "left-[16px]" : "left-[2px]"
+          "absolute top-0.5 bg-white w-3.5 h-3.5 rounded-full transition-all duration-200 shadow-sm",
+          checked ? "left-4" : "left-0.5"
         )}></div>
       </div>
       {label && <span className="ml-3 text-[13px] font-medium text-neutral-600">{label}</span>}
@@ -139,10 +140,10 @@ export const Dialog: React.FC<{
   title: string; 
   children: React.ReactNode 
 }> = ({ isOpen, onClose, title, children }) => {
-  return (
+  const dialog = (
     <div
       className={cn(
-        "fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm transition-all duration-300",
+        "fixed inset-0 z-[100] flex h-screen w-screen items-center justify-center p-4 bg-black/20 backdrop-blur-sm transition-all duration-300",
         isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
       )}
     >
@@ -164,4 +165,10 @@ export const Dialog: React.FC<{
       </div>
     </div>
   );
+
+  if (typeof document === 'undefined') {
+    return dialog;
+  }
+
+  return createPortal(dialog, document.body);
 };
