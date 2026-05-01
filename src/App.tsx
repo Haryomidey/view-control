@@ -13,30 +13,33 @@ import { Signup } from './pages/auth/signup';
 import { VerifyOtp } from './pages/auth/verify-otp';
 import { Reset } from './pages/auth/reset';
 import { ForgotPassword } from './pages/auth/forgot-password';
+import { ToastProvider } from './components/ui';
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/verify-otp" element={<VerifyOtp />} />
-        <Route path="/reset" element={<Reset />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
+    <ToastProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/verify-otp" element={<VerifyOtp />} />
+          <Route path="/reset" element={<Reset />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
 
-        <Route element={<AppLayout />}>
-          <Route path="/" element={<Overview />} />
-          <Route path="/projects" element={<Projects />} />
-          <Route path="/controls" element={<Controls />} />
-          <Route path="/rules" element={<Rules />} />
-          <Route path="/banners" element={<Banners />} />
-          <Route path="/activity" element={<Activity />} />
-          <Route path="/install" element={<Install />} />
-          <Route path="/settings" element={<Settings />} />
-          {/* Catch all to home */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
+          <Route element={<AppLayout />}>
+            <Route path="/" element={<Overview />} />
+            <Route path="/projects" element={<Projects />} />
+            <Route path="/controls" element={<Controls />} />
+            <Route path="/rules" element={<Rules />} />
+            <Route path="/banners" element={<Banners />} />
+            <Route path="/activity" element={<Activity />} />
+            <Route path="/install" element={<Install />} />
+            <Route path="/settings" element={<Settings />} />
+            {/* Catch all to home */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </ToastProvider>
   );
 }

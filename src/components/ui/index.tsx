@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { cn } from '../../lib/utils';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
+import { CheckCircle2, Info, TriangleAlert, X } from 'lucide-react';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
@@ -38,7 +39,7 @@ export const Button: React.FC<ButtonProps> = ({
     <motion.button
       whileTap={{ scale: 0.98 }}
       className={cn(baseStyles, variants[variant], sizes[size], className)}
-      {...props}
+      {...(props as any)}
     >
       {isLoading ? (
         <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
@@ -171,4 +172,133 @@ export const Dialog: React.FC<{
   }
 
   return createPortal(dialog, document.body);
+};
+
+type ToastVariant = 'success' | 'info' | 'warning' | 'error';
+
+interface ToastItem {
+  id: number;
+  title: string;
+  description?: string;
+  variant: ToastVariant;
+}
+
+interface ToastContextValue {
+  success: (title: string, description?: string) => void;
+  info: (title: string, description?: string) => void;
+  warning: (title: string, description?: string) => void;
+  error: (title: string, description?: string) => void;
+}
+
+const ToastContext = createContext<ToastContextValue | null>(null);
+
+const toastStyles = {
+  success: {
+    icon: CheckCircle2,
+    iconClassName: 'text-green-600',
+    barClassName: 'bg-green-600',
+  },
+  info: {
+    icon: Info,
+    iconClassName: 'text-black',
+    barClassName: 'bg-black',
+  },
+  warning: {
+    icon: TriangleAlert,
+    iconClassName: 'text-amber-600',
+    barClassName: 'bg-amber-500',
+  },
+  error: {
+    icon: TriangleAlert,
+    iconClassName: 'text-red-600',
+    barClassName: 'bg-red-600',
+  },
+};
+
+export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [toasts, setToasts] = useState<ToastItem[]>([]);
+
+  const dismiss = useCallback((id: number) => {
+    setToasts((items) => items.filter((toast) => toast.id !== id));
+  }, []);
+
+  const show = useCallback((variant: ToastVariant, title: string, description?: string) => {
+    const id = Date.now() + Math.floor(Math.random() * 1000);
+    setToasts((items) => [...items, { id, title, description, variant }].slice(-4));
+    window.setTimeout(() => dismiss(id), 4200);
+  }, [dismiss]);
+
+  const value = useMemo<ToastContextValue>(() => ({
+    success: (title, description) => show('success', title, description),
+    info: (title, description) => show('info', title, description),
+    warning: (title, description) => show('warning', title, description),
+    error: (title, description) => show('error', title, description),
+  }), [show]);
+
+  const viewport = (
+    <div className="fixed right-4 top-4 z-[120] flex w-[calc(100vw-2rem)] max-w-sm flex-col gap-3 pointer-events-none">
+      <AnimatePresence initial={false}>
+        {toasts.map((toast) => {
+          const style = toastStyles[toast.variant];
+          const Icon = style.icon;
+
+          return (
+            <motion.div
+              key={toast.id}
+              layout
+              initial={{ opacity: 0, x: 32, scale: 0.96, filter: 'blur(4px)' }}
+              animate={{ opacity: 1, x: 0, scale: 1, filter: 'blur(0px)' }}
+              exit={{ opacity: 0, x: 32, scale: 0.96, filter: 'blur(4px)' }}
+              transition={{ type: 'spring', stiffness: 420, damping: 32 }}
+              className="pointer-events-auto relative overflow-hidden rounded-lg border border-border bg-white shadow-premium"
+            >
+              <div className={cn('absolute left-0 top-0 h-full w-1', style.barClassName)} />
+              <div className="flex items-start gap-3 p-4 pl-5">
+                <div className="mt-0.5 shrink-0">
+                  <Icon size={18} className={style.iconClassName} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[13px] font-bold text-black">{toast.title}</p>
+                  {toast.description && (
+                    <p className="mt-1 text-[12px] leading-relaxed text-neutral-500">{toast.description}</p>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => dismiss(toast.id)}
+                  className="shrink-0 text-neutral-400 hover:text-black transition-colors"
+                  aria-label="Dismiss notification"
+                >
+                  <X size={15} />
+                </button>
+              </div>
+              <motion.div
+                className={cn('h-0.5 origin-left', style.barClassName)}
+                initial={{ scaleX: 1 }}
+                animate={{ scaleX: 0 }}
+                transition={{ duration: 4.2, ease: 'linear' }}
+              />
+            </motion.div>
+          );
+        })}
+      </AnimatePresence>
+    </div>
+  );
+
+  return (
+    <ToastContext.Provider value={value}>
+      {children}
+      {typeof document !== 'undefined' ? createPortal(viewport, document.body) : viewport}
+    </ToastContext.Provider>
+  );
+};
+
+export const useToast = () => {
+  const context = useContext(ToastContext);
+
+  if (!context) {
+    throw new Error('useToast must be used within ToastProvider');
+  }
+
+  return context;
 };

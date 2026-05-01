@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, Button, Badge, Input } from '../../../components/ui';
+import { Card, Button, Badge, Input, useToast } from '../../../components/ui';
 import { 
   Zap, 
   Bell, 
@@ -23,6 +23,7 @@ const ActivityIcon = ({ type }: { type: string }) => {
 };
 
 export const Activity: React.FC = () => {
+  const toast = useToast();
   const [searchQuery, setSearchQuery] = React.useState("");
   const [typeFilter, setTypeFilter] = React.useState<string | null>(null);
 
@@ -66,7 +67,12 @@ export const Activity: React.FC = () => {
               />
            </div>
            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <Button variant="outline" size="sm" className="h-9 flex-1 sm:flex-none" onClick={() => alert("Date filtering usually opens a calendar overlay.")}>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 flex-1 sm:flex-none"
+                onClick={() => toast.info('Date filter coming soon', 'This will open a calendar overlay for narrowing activity history.')}
+              >
                 <Calendar size={14} className="mr-2" />
                 Date
               </Button>

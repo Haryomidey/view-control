@@ -1,0 +1,270 @@
+# ViewControl
+
+ViewControl is a dashboard, API, and browser runtime for remotely controlling websites that have the ViewControl runtime installed. A user registers a website in the dashboard, installs either the npm runtime package or a CDN script on that website, and then manages visibility rules, text changes, banners, and other DOM-level controls from the ViewControl dashboard.
+
+## What This Project Contains
+
+This repository is organized as a small monorepo:
+
+```txt
+src/                  React + Vite dashboard
+server/               Node/Express API written in TypeScript
+packages/runtime/     TypeScript browser runtime for npm and CDN usage
+```
+
+The dashboard is the control plane. It lets users manage projects, controls, banners, activity, installation snippets, authentication screens, and workspace settings.
+
+The API is the backend service. It handles auth, projects, controls, banners, runtime configuration, and runtime event reporting. It uses Express, MongoDB, and Mongoose.
+
+The runtime is the script installed on customer websites. It fetches active controls for a project key, applies matching DOM changes, renders banners, observes dynamic DOM changes, and reports load/apply/error events back to the API.
+
+## How The Runtime Flow Works
+
+1. A user creates a project in ViewControl.
+2. The API generates a unique `projectKey`.
+3. The dashboard shows an install snippet for that project.
+4. The user installs ViewControl on their website with either:
+
+```html
+<script
+  src="https://your-api-domain.com/cdn/viewcontrol.js"
+  data-project-id="vc_your_project_key"
+  data-api-url="https://your-api-domain.com"
+  async
+></script>
+```
+
+or:
+
+```ts
+import { init } from '@viewcontrol/runtime';
+
+init({
+  projectId: 'vc_your_project_key',
+  apiUrl: 'https://your-api-domain.com',
+});
+```
+
+5. The runtime requests:
+
+```txt
+GET /api/runtime/config?projectId=...&url=...
+```
+
+6. The API returns active controls and banners for that project.
+7. The runtime applies those rules on the installed website.
+8. Runtime events are sent to:
+
+```txt
+POST /api/runtime/events
+```
+
+## Backend Features
+
+- Express API written in TypeScript
+- MongoDB/Mongoose models for users, projects, controls, banners, and runtime events
+- JWT-based auth foundation
+- Project keys for runtime installation
+- Domain allow checks for runtime config requests
+- Runtime event reporting
+- Basic in-memory rate limiting
+- Centralized error handling
+- CDN serving for the built runtime bundle
+
+## Runtime Features
+
+- TypeScript source
+- CDN bundle: `packages/runtime/dist/viewcontrol.js`
+- npm/module bundle: `packages/runtime/dist/index.mjs`
+- Supports DOM controls:
+  - hide
+  - show
+  - text/replace
+  - html
+  - opacity
+  - display
+  - class
+  - style
+- Supports top/bottom banners
+- Re-applies rules after DOM mutations for dynamic apps
+- Polls for updated config
+- Reports load, apply, and error events
+
+## Requirements
+
+- Node.js
+- pnpm
+- MongoDB running locally or a hosted MongoDB URI
+
+## Environment Setup
+
+Create `server/.env` from `server/.env.example`:
+
+```bash
+cp server/.env.example server/.env
+```
+
+On Windows PowerShell:
+
+```powershell
+Copy-Item server/.env.example server/.env
+```
+
+Generate a long random `JWT_SECRET` with Node:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
+```
+
+Example `server/.env`:
+
+```env
+NODE_ENV=development
+PORT=4000
+MONGODB_URI=mongodb://127.0.0.1:27017/viewcontrol
+JWT_SECRET=replace-with-the-generated-random-string
+DASHBOARD_ORIGIN=http://localhost:5173
+PUBLIC_API_URL=http://localhost:4000
+RUNTIME_CDN_URL=http://localhost:4000/cdn/viewcontrol.js
+```
+
+For the dashboard install snippets, you can also define Vite env variables:
+
+```env
+VITE_VIEWCONTROL_API_URL=http://localhost:4000
+VITE_VIEWCONTROL_CDN_URL=http://localhost:4000/cdn/viewcontrol.js
+```
+
+## Install Dependencies
+
+```bash
+pnpm install
+```
+
+## Development
+
+Run the dashboard:
+
+```bash
+npm run dev
+```
+
+Run the API:
+
+```bash
+npm run dev:api
+```
+
+Build the runtime before serving the CDN script:
+
+```bash
+npm run build:runtime
+```
+
+The API serves the CDN bundle from:
+
+```txt
+http://localhost:4000/cdn/viewcontrol.js
+```
+
+## Build Commands
+
+Build the dashboard:
+
+```bash
+npm run build
+```
+
+Build the API:
+
+```bash
+npm run build:api
+```
+
+Build the runtime:
+
+```bash
+npm run build:runtime
+```
+
+Build everything:
+
+```bash
+npm run build:all
+```
+
+## Type Checks
+
+Frontend:
+
+```bash
+npm run lint
+```
+
+API:
+
+```bash
+npm run typecheck:api
+```
+
+Runtime:
+
+```bash
+npm run typecheck:runtime
+```
+
+## Important API Routes
+
+Auth:
+
+```txt
+POST /api/auth/signup
+POST /api/auth/login
+GET  /api/auth/me
+```
+
+Projects:
+
+```txt
+GET    /api/projects
+POST   /api/projects
+GET    /api/projects/:projectId
+DELETE /api/projects/:projectId
+```
+
+Controls:
+
+```txt
+GET    /api/controls
+POST   /api/controls
+PATCH  /api/controls/:controlId
+DELETE /api/controls/:controlId
+```
+
+Banners:
+
+```txt
+GET    /api/banners
+POST   /api/banners
+PATCH  /api/banners/:bannerId
+DELETE /api/banners/:bannerId
+```
+
+Runtime:
+
+```txt
+GET  /api/runtime/config
+POST /api/runtime/events
+```
+
+## Current Status
+
+The foundation is in place:
+
+- Dashboard UI exists.
+- Auth pages exist.
+- Express/Mongoose API structure exists.
+- Runtime package/CDN build exists.
+- Install snippets point to the runtime contract.
+
+The next major step is connecting the dashboard forms and screens to the API instead of mock data in `src/lib/data.ts`.

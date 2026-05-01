@@ -5,16 +5,32 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:api": "tsx watch server/src/index.ts",
+    "start:api": "node server/dist/index.js",
+    "build:api": "tsc -p server/tsconfig.json",
     "build": "vite build",
+    "build:runtime": "tsx packages/runtime/scripts/build.ts",
+    "build:all": "npm run build:runtime && npm run build:api && npm run build",
     "preview": "vite preview",
     "clean": "rm -rf dist",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "typecheck:api": "tsc -p server/tsconfig.json --noEmit",
+    "typecheck:runtime": "tsc -p packages/runtime/tsconfig.json --noEmit"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.14",
     "@vitejs/plugin-react": "^5.0.4",
+    "bcryptjs": "^2.4.3",
+    "compression": "^1.7.4",
     "clsx": "^2.1.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.546.0",
+    "mongoose": "^8.9.5",
+    "morgan": "^1.10.0",
     "motion": "^12.23.24",
     "react": "^19.0.1",
     "react-dom": "^19.0.1",
@@ -31,6 +47,12 @@
     "tailwindcss": "^4.1.14",
     "tsx": "^4.21.0",
     "typescript": "~5.8.2",
+    "esbuild": "^0.25.12",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/compression": "^1.7.5",
+    "@types/cors": "^2.8.17",
+    "@types/jsonwebtoken": "^9.0.7",
+    "@types/morgan": "^1.9.9",
     "vite": "^6.2.3"
   }
 }

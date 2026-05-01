@@ -5,6 +5,7 @@ import {
   Layers, 
   ShieldCheck
 } from 'lucide-react';
+import { DEMO_PROJECT_KEY, VIEWCONTROL_API_URL, VIEWCONTROL_CDN_URL } from '../../../lib/viewcontrol';
 
 const CodeSnippet = ({ code, language }: { code: string, language: string }) => {
   const [copied, setCopied] = useState(false);
@@ -55,7 +56,7 @@ export const Install: React.FC = () => {
           </p>
           <CodeSnippet 
             language="HTML/Javascript"
-            code={`<script \n  src="https://cdn.viewcontrol.dev/runtime.js" \n  data-project-id="vc_9281_prj_main" \n  async\n></script>`} 
+            code={`<script\n  src="${VIEWCONTROL_CDN_URL}"\n  data-project-id="${DEMO_PROJECT_KEY}"\n  data-api-url="${VIEWCONTROL_API_URL}"\n  async\n></script>`} 
           />
         </section>
 
@@ -74,7 +75,7 @@ export const Install: React.FC = () => {
             <CodeSnippet language="Terminal" code="npm install @viewcontrol/runtime" />
             <CodeSnippet 
               language="TypeScript / Javascript" 
-              code={`import { init } from '@viewcontrol/runtime';\n\ninit({\n  projectId: 'vc_9281_prj_main',\n  debug: process.env.NODE_ENV === 'development'\n});`} 
+              code={`import { init } from '@viewcontrol/runtime';\n\ninit({\n  projectId: '${DEMO_PROJECT_KEY}',\n  apiUrl: '${VIEWCONTROL_API_URL}',\n  debug: import.meta.env.DEV\n});`} 
             />
           </div>
         </section>
@@ -89,7 +90,7 @@ export const Install: React.FC = () => {
                  </h3>
                  <p className="text-[11px] md:text-xs text-neutral-500 leading-relaxed">
                     Once installed, our servers will attempt to handshake with your domain. 
-                    Ensure your CORS settings allow requests from <code className="text-black font-mono">*.viewcontrol.dev</code>.
+                    Your installed runtime will request controls from <code className="text-black font-mono">{VIEWCONTROL_API_URL}</code>.
                  </p>
               </div>
               <div className="flex items-center justify-between md:justify-end gap-3 w-full md:w-auto">

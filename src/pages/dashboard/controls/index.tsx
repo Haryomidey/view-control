@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Card, Button, Input, Switch, Badge, Dialog } from '../../../components/ui';
+import { Card, Button, Input, Switch, Badge, Dialog, useToast } from '../../../components/ui';
 import { cn } from '../../../lib/utils';
 import { 
   Zap, 
@@ -17,6 +17,7 @@ import { projects } from '../../../lib/data';
 import { motion } from 'motion/react';
 
 export const Controls: React.FC = () => {
+  const toast = useToast();
   const [selectedProjectId, setSelectedProjectId] = useState(projects[0].id);
   const [activeTab, setActiveTab] = useState<'build' | 'preview'>('build');
   const [selectedAction, setSelectedAction] = useState('hide');
@@ -27,7 +28,7 @@ export const Controls: React.FC = () => {
     setIsSaving(true);
     setTimeout(() => {
       setIsSaving(false);
-      alert('Control rule saved successfully.');
+      toast.success('Control rule saved', 'Your visibility rule is active on the selected project.');
     }, 1000);
   };
 
