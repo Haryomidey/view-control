@@ -125,6 +125,7 @@ export const Controls: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [isLoadingProjects, setIsLoadingProjects] = useState(true);
   const [isNewControlOpen, setIsNewControlOpen] = useState(false);
+  const selectedProject = projects.find((project) => project.id === selectedProjectId);
 
   React.useEffect(() => {
     let isMounted = true;
@@ -179,6 +180,17 @@ export const Controls: React.FC = () => {
   };
 
   const previewPayload = {
+    project: selectedProject ? {
+      id: selectedProject.id,
+      key: selectedProject.projectKey,
+      name: selectedProject.name,
+      domain: selectedProject.domain,
+    } : {
+      id: 'PROJECT_ID',
+      key: 'PROJECT_KEY',
+      name: 'Select a project',
+      domain: 'example.com',
+    },
     projectId: selectedProjectId || 'PROJECT_ID',
     name: ruleName || 'Untitled control',
     selector: selector || '.hero-title',
