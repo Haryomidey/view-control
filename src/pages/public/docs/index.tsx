@@ -4,6 +4,7 @@ import { cn } from '../../../lib/utils';
 import { PublicHeader } from '../../../components/public/PublicHeader';
 import { PublicFooter } from '../../../components/public/PublicFooter';
 import { CodeBlock } from '../../../components/public/CodeBlock';
+import { VIEWCONTROL_API_URL, VIEWCONTROL_CDN_URL } from '../../../lib/viewcontrol';
 
 const sections = [
   { id: 'intro', title: 'Introduction', icon: BookOpen },
@@ -91,9 +92,9 @@ export const Docs = () => {
             <CodeBlock
               className="mt-5"
               code={`<script
-  src="https://your-api-domain.com/cdn/viewcontrol.js"
+  src="${VIEWCONTROL_CDN_URL}"
   data-project-id="YOUR_PROJECT_KEY"
-  data-api-url="https://your-api-domain.com"
+  data-api-url="${VIEWCONTROL_API_URL}"
   data-poll-interval="30000"
   data-debug="false"
   async
@@ -114,7 +115,7 @@ import { init } from '@viewcontrol/runtime';
 
 init({
   projectId: 'YOUR_PROJECT_KEY',
-  apiUrl: 'https://your-api-domain.com',
+  apiUrl: '${VIEWCONTROL_API_URL}',
   pollInterval: 30000,
   debug: false,
 });`}
