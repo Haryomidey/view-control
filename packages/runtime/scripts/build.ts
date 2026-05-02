@@ -1,5 +1,6 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { spawnSync } from 'child_process';
 import { build } from 'esbuild';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -35,4 +36,13 @@ await Promise.all([
   }),
 ]);
 
-console.log('[runtime] Built packages/runtime/dist/index.mjs and viewcontrol.js');
+const tscPath = path.resolve(packageRoot, '..', '..', 'node_modules', 'typescript', 'bin', 'tsc');
+const typesBuild = spawnSync(process.execPath, [tscPath, '-p', path.join(packageRoot, 'tsconfig.types.json')], {
+  stdio: 'inherit',
+});
+
+if (typesBuild.status !== 0) {
+  process.exit(typesBuild.status ?? 1);
+}
+
+console.log('[runtime] Built packages/runtime/dist/index.mjs, viewcontrol.js, and declarations');

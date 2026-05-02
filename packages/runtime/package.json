@@ -1,12 +1,14 @@
 {
   "name": "@viewcontrol/runtime",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Client runtime for applying ViewControl dashboard rules to installed websites.",
   "type": "module",
   "main": "./dist/index.mjs",
   "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
       "default": "./dist/viewcontrol.js"
     }
