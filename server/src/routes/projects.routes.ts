@@ -35,7 +35,7 @@ const serializeProject = (project: ProjectDocumentLike) => ({
   status: project.status,
   lastSeenAt: project.lastSeenAt,
   install: {
-    cdn: `<script src="${env.runtimeCdnUrl}" data-project-id="${project.projectKey}" async></script>`,
+    cdn: `<script src="${env.runtimeCdnUrl}" data-project-id="${project.projectKey}" data-api-url="${env.publicApiUrl}" async></script>`,
     npm: `import { init } from '@viewcontrol/runtime';\n\ninit({ projectId: '${project.projectKey}', apiUrl: '${env.publicApiUrl}' });`,
   },
   createdAt: project.createdAt,

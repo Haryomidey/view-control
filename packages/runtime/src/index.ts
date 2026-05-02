@@ -77,7 +77,7 @@ const normalizeApiUrl = (apiUrl: string) => apiUrl.replace(/\/$/, '');
 
 const getCurrentScriptOptions = (): Partial<RuntimeOptions> => {
   const script =
-    document.currentScript ||
+    (document.currentScript instanceof HTMLScriptElement ? document.currentScript : null) ||
     document.querySelector<HTMLScriptElement>('script[data-project-id]');
 
   if (!script) {
@@ -85,13 +85,26 @@ const getCurrentScriptOptions = (): Partial<RuntimeOptions> => {
   }
 
   const pollInterval = Number(script.getAttribute('data-poll-interval') || 0);
+  const apiUrl = script.getAttribute('data-api-url') || inferApiUrlFromScript(script);
 
   return {
     projectId: script.getAttribute('data-project-id') || '',
-    apiUrl: script.getAttribute('data-api-url') || undefined,
+    apiUrl,
     pollInterval: Number.isFinite(pollInterval) ? pollInterval : undefined,
     debug: script.getAttribute('data-debug') === 'true',
   };
+};
+
+const inferApiUrlFromScript = (script: HTMLScriptElement) => {
+  if (!script.src) {
+    return undefined;
+  }
+
+  try {
+    return new URL(script.src, window.location.href).origin;
+  } catch {
+    return undefined;
+  }
 };
 
 const pathMatches = (pattern = '*', pathname = window.location.pathname) => {

@@ -158,6 +158,10 @@ export const controlsApi = {
   async update(controlId: string, input: Partial<ApiControl>) {
     return unwrap(await api.patch<ApiEnvelope<{ control: ApiControl }>>(`/controls/${controlId}`, input)).control;
   },
+
+  async remove(controlId: string) {
+    return unwrap(await api.delete<ApiEnvelope<{ deleted: boolean }>>(`/controls/${controlId}`));
+  },
 };
 
 export const bannersApi = {

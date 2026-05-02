@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Skeleton from 'react-loading-skeleton';
-import { Card, Button, Input, Switch, Dialog, useToast } from '../../../components/ui';
+import { Card, Button, Input, Switch, Dialog, useToast, Badge } from '../../../components/ui';
 import { cn } from '../../../lib/utils';
 import { 
   Zap, 
@@ -124,7 +124,9 @@ export const Controls: React.FC = () => {
   const [isActiveInstantly, setIsActiveInstantly] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoadingProjects, setIsLoadingProjects] = useState(true);
+  const [isLoadingControls, setIsLoadingControls] = useState(false);
   const [isNewControlOpen, setIsNewControlOpen] = useState(false);
+  const [savedControls, setSavedControls] = useState<ApiControl[]>([]);
   const selectedProject = projects.find((project) => project.id === selectedProjectId);
 
   React.useEffect(() => {
@@ -149,6 +151,33 @@ export const Controls: React.FC = () => {
     };
   }, [toast]);
 
+  React.useEffect(() => {
+    if (!selectedProjectId) {
+      setSavedControls([]);
+      return;
+    }
+
+    let isMounted = true;
+    setIsLoadingControls(true);
+
+    controlsApi.list(selectedProjectId)
+      .then((items) => {
+        if (isMounted) {
+          setSavedControls(items);
+        }
+      })
+      .catch((err) => toast.error('Unable to load controls', getApiErrorMessage(err)))
+      .finally(() => {
+        if (isMounted) {
+          setIsLoadingControls(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedProjectId, toast]);
+
   const handleSave = async () => {
     if (!selectedProjectId || !ruleName || !selector) {
       toast.warning('Missing control details', 'Choose a project, name the rule, and add a selector.');
@@ -158,7 +187,7 @@ export const Controls: React.FC = () => {
     setIsSaving(true);
 
     try {
-      await controlsApi.create({
+      const control = await controlsApi.create({
         projectId: selectedProjectId,
         name: ruleName,
         selector,
@@ -167,6 +196,7 @@ export const Controls: React.FC = () => {
         value: value || null,
         isActive: isActiveInstantly,
       });
+      setSavedControls((items) => [control, ...items]);
       setRuleName('');
       setSelector('');
       setPathPattern('*');
@@ -382,6 +412,57 @@ export const Controls: React.FC = () => {
           </div>
         </div>
       </div>
+
+      <Card title="Saved Controls" description={selectedProject ? `Controls for ${selectedProject.name}` : 'Select a project to view controls.'}>
+        <div className="space-y-3">
+          {isLoadingControls && Array.from({ length: 3 }).map((_, index) => (
+            <div key={index} className="rounded-lg border border-border p-4">
+              <Skeleton width="35%" height={16} />
+              <Skeleton width="65%" height={12} className="mt-3" />
+            </div>
+          ))}
+
+          {!isLoadingControls && savedControls.length === 0 && (
+            <div className="rounded-lg border border-dashed border-neutral-200 px-4 py-8 text-center">
+              <h3 className="text-sm font-bold text-black">No controls yet</h3>
+              <p className="mt-1 text-[12px] text-neutral-500">Saved controls for this project will appear here.</p>
+            </div>
+          )}
+
+          {!isLoadingControls && savedControls.map((control) => (
+            <div key={control.id} className="rounded-lg border border-border p-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="text-[14px] font-bold text-black">{control.name}</h3>
+                    <Badge variant={control.isActive ? 'success' : 'neutral'}>{control.isActive ? 'Active' : 'Paused'}</Badge>
+                  </div>
+                  <div className="mt-2 grid gap-1 text-[12px] text-neutral-500 md:grid-cols-2">
+                    <p className="min-w-0">
+                      <span className="font-bold text-neutral-700">Selector:</span>{' '}
+                      <code className="break-all">{control.selector}</code>
+                    </p>
+                    <p>
+                      <span className="font-bold text-neutral-700">Path:</span>{' '}
+                      <code>{control.pathPattern}</code>
+                    </p>
+                    <p>
+                      <span className="font-bold text-neutral-700">Action:</span> {control.action}
+                    </p>
+                    <p className="min-w-0">
+                      <span className="font-bold text-neutral-700">Value:</span>{' '}
+                      <span className="break-all">{control.value == null || control.value === '' ? 'None' : String(control.value)}</span>
+                    </p>
+                  </div>
+                </div>
+                <span className="shrink-0 text-[11px] font-medium text-neutral-400">
+                  {new Date(control.updatedAt).toLocaleDateString()}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Card>
     </div>
   );
 };
