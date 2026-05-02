@@ -30,6 +30,10 @@ export const env = {
   mongodbDnsServers,
   jwtSecret: process.env.JWT_SECRET || 'dev-viewcontrol-secret-change-me',
   dashboardOrigin: process.env.DASHBOARD_ORIGIN || 'http://localhost:5173',
+  dashboardOrigins: (process.env.DASHBOARD_ORIGINS || process.env.DASHBOARD_ORIGIN || 'http://localhost:5173')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean),
   publicApiUrl: process.env.PUBLIC_API_URL || 'http://localhost:4000',
   runtimeCdnUrl: process.env.RUNTIME_CDN_URL || 'http://localhost:4000/cdn/viewcontrol.js',
 };

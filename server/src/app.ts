@@ -38,7 +38,7 @@ export const createApp = () => {
         return callback(null, true);
       }
 
-      if (origin === env.dashboardOrigin || env.nodeEnv !== 'production') {
+      if (env.dashboardOrigins.includes(origin) || env.nodeEnv !== 'production') {
         return callback(null, true);
       }
 
