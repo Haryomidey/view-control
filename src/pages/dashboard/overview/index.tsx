@@ -70,7 +70,7 @@ export const Overview: React.FC = () => {
               <h2 className="text-base md:text-lg font-bold tracking-tight">Recent Activity</h2>
               <p className="text-[12px] md:text-sm text-neutral-500">Currently active element injections</p>
             </div>
-            <Link to="/controls" className="w-fit">
+            <Link to="/dashboard/controls" className="w-fit">
               <Button size="sm">+ New Control</Button>
             </Link>
           </div>

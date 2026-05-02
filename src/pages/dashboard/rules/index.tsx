@@ -86,7 +86,7 @@ export const Rules: React.FC = () => {
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" className="flex-1 sm:flex-none">Export</Button>
-            <Link to="/controls" className="flex-1 sm:flex-none">
+            <Link to="/dashboard/controls" className="flex-1 sm:flex-none">
               <Button size="sm" className="w-full">+ New Control</Button>
             </Link>
           </div>

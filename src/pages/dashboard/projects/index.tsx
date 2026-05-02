@@ -285,7 +285,7 @@ export const Projects: React.FC = () => {
                   variant="outline" 
                   size="sm" 
                   className="h-8 py-0"
-                  onClick={() => navigate('/controls')}
+                  onClick={() => navigate('/dashboard/controls')}
                 >
                   Manage
                 </Button>
