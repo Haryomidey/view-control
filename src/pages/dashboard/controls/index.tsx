@@ -81,6 +81,16 @@ export const Controls: React.FC = () => {
     }
   };
 
+  const previewPayload = {
+    projectId: selectedProjectId || 'PROJECT_ID',
+    name: ruleName || 'Untitled control',
+    selector: selector || '.hero-title',
+    pathPattern,
+    action: selectedAction,
+    value: value || null,
+    isActive: isActiveInstantly,
+  };
+
   return (
     <div className="space-y-6 md:space-y-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -233,37 +243,45 @@ export const Controls: React.FC = () => {
             </div>
 
             <Card className="min-h-100 flex flex-col p-0">
-               <div className="bg-neutral-50 border-b border-border p-3 flex items-center gap-2">
-                  <div className="flex gap-1.5">
-                    <div className="w-2.5 h-2.5 rounded-full bg-neutral-200" />
-                    <div className="w-2.5 h-2.5 rounded-full bg-neutral-200" />
-                    <div className="w-2.5 h-2.5 rounded-full bg-neutral-200" />
-                  </div>
-                  <div className="flex-1 px-2 py-1 bg-white border border-border rounded text-[10px] text-neutral-400 font-mono truncate">
-                    https://viewcontrol.dev/demo/hero
-                  </div>
-               </div>
-               
-               <div className="flex-1 p-8 bg-neutral-50/30 flex flex-col items-center justify-center text-center space-y-4 relative overflow-hidden">
-                  {/* Mock Website Elements */}
-                  <div className="w-full max-w-60 space-y-4">
-                    <div className="h-4 w-3/4 bg-neutral-200 rounded mx-auto" />
-                    <div className="h-8 w-full bg-black rounded" id="sim-hero" />
-                    <div className="h-3 w-1/2 bg-neutral-200 rounded mx-auto" />
-                    <div className="h-10 w-2/3 bg-neutral-200 rounded mx-auto" />
+              {activeTab === 'build' ? (
+                <>
+                  <div className="bg-neutral-50 border-b border-border p-3 flex items-center gap-2">
+                    <div className="flex gap-1.5">
+                      <div className="w-2.5 h-2.5 rounded-full bg-neutral-200" />
+                      <div className="w-2.5 h-2.5 rounded-full bg-neutral-200" />
+                      <div className="w-2.5 h-2.5 rounded-full bg-neutral-200" />
+                    </div>
+                    <div className="flex-1 px-2 py-1 bg-white border border-border rounded text-[10px] text-neutral-400 font-mono truncate">
+                      https://viewcontrol.dev/demo/hero
+                    </div>
                   </div>
 
-                  {/* Overlay indicating selection */}
-                  <motion.div 
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="absolute inset-0 border-2 border-dashed border-black m-6 pointer-events-none flex items-center justify-center"
-                  >
-                    <div className="absolute top-0 left-0 bg-black text-white text-[8px] font-mono px-1.5 py-0.5 uppercase tracking-tighter">
-                      #hero-title
+                  <div className="flex-1 p-8 bg-neutral-50/30 flex flex-col items-center justify-center text-center space-y-4 relative overflow-hidden">
+                    <div className="w-full max-w-60 space-y-4">
+                      <div className="h-4 w-3/4 bg-neutral-200 rounded mx-auto" />
+                      <div className="h-8 w-full bg-black rounded" id="sim-hero" />
+                      <div className="h-3 w-1/2 bg-neutral-200 rounded mx-auto" />
+                      <div className="h-10 w-2/3 bg-neutral-200 rounded mx-auto" />
                     </div>
-                  </motion.div>
-               </div>
+
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="absolute inset-0 border-2 border-dashed border-black m-6 pointer-events-none flex items-center justify-center"
+                    >
+                      <div className="absolute top-0 left-0 bg-black text-white text-[8px] font-mono px-1.5 py-0.5 uppercase tracking-tighter">
+                        {selector || '#hero-title'}
+                      </div>
+                    </motion.div>
+                  </div>
+                </>
+              ) : (
+                <div className="flex-1 bg-neutral-950 p-4 overflow-auto">
+                  <pre className="text-[11px] leading-relaxed text-neutral-100 font-mono whitespace-pre-wrap">
+                    {JSON.stringify(previewPayload, null, 2)}
+                  </pre>
+                </div>
+              )}
             </Card>
           </div>
         </div>

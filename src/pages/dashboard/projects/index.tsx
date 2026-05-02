@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Skeleton from 'react-loading-skeleton';
-import { Card, Button, Badge, Input, Dialog } from '../../../components/ui';
+import { Card, Button, Badge, Input, Dialog, useToast } from '../../../components/ui';
 import { Plus, Search, ExternalLink, Globe, Trash2, AlertCircle } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -15,6 +15,7 @@ const getProjectUrl = (domain: string) => {
 };
 
 export const Projects: React.FC = () => {
+  const toast = useToast();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -27,6 +28,7 @@ export const Projects: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
+  const [deleteError, setDeleteError] = useState('');
 
   const filteredProjects = projects.filter(project => 
     project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -74,8 +76,21 @@ export const Projects: React.FC = () => {
     }
   };
 
-  const handleDeleteClick = (project: ApiProject) => {
+  const closeDeleteProject = () => {
+    if (isSaving) {
+      return;
+    }
+
+    setIsDeleteOpen(false);
+    setSelectedProject(null);
+    setDeleteError('');
+  };
+
+  const handleDeleteClick = (event: React.MouseEvent<HTMLButtonElement>, project: ApiProject) => {
+    event.preventDefault();
+    event.stopPropagation();
     setSelectedProject(project);
+    setDeleteError('');
     setIsDeleteOpen(true);
   };
 
@@ -107,15 +122,16 @@ export const Projects: React.FC = () => {
     }
 
     setIsSaving(true);
-    setError('');
+    setDeleteError('');
 
     try {
       await projectsApi.remove(selectedProject.id);
       setProjects((items) => items.filter((project) => project.id !== selectedProject.id));
       setIsDeleteOpen(false);
       setSelectedProject(null);
+      toast.success('Project deleted', `${selectedProject.name} was removed from your workspace.`);
     } catch (err) {
-      setError(getApiErrorMessage(err, 'Unable to delete project.'));
+      setDeleteError(getApiErrorMessage(err, 'Unable to delete project.'));
     } finally {
       setIsSaving(false);
     }
@@ -154,7 +170,7 @@ export const Projects: React.FC = () => {
       {/* Delete Confirmation Dialog */}
       <Dialog 
         isOpen={isDeleteOpen} 
-        onClose={() => setIsDeleteOpen(false)} 
+        onClose={closeDeleteProject} 
         title="Delete Project"
       >
         <div className="space-y-6">
@@ -168,22 +184,14 @@ export const Projects: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-neutral-50 p-4 rounded-lg border border-neutral-200">
-            <p className="text-[11px] font-bold uppercase tracking-widest text-neutral-400 mb-3">Important Note</p>
-            <p className="text-[12px] text-neutral-600 leading-relaxed">
-              Deletions only remove the project from the ViewControl dashboard. 
-              <span className="font-bold text-black"> Your source code and deployments </span> 
-              on platforms like <span className="underline italic">GitHub</span>, 
-              <span className="underline italic">Vercel</span>, or 
-              <span className="underline italic">Render</span> will not be affected.
-            </p>
-          </div>
+          {deleteError && <p className="rounded-md border border-red-100 bg-red-50 px-3 py-2 text-[12px] font-medium text-red-700">{deleteError}</p>}
 
           <div className="flex flex-col sm:flex-row gap-3 pt-2">
             <Button 
               variant="outline" 
               className="flex-1" 
-              onClick={() => setIsDeleteOpen(false)}
+              onClick={closeDeleteProject}
+              disabled={isSaving}
             >
               Cancel
             </Button>
@@ -245,9 +253,10 @@ export const Projects: React.FC = () => {
                     {project.status}
                   </Badge>
                   <button 
-                    onClick={() => handleDeleteClick(project)}
+                    onClick={(event) => handleDeleteClick(event, project)}
                     className="text-neutral-400 hover:text-red-600 p-1 transition-colors"
                     title="Delete Project"
+                    type="button"
                   >
                     <Trash2 size={16} />
                   </button>
