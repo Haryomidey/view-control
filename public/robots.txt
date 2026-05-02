@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /login
+Disallow: /signup
+Disallow: /verify-otp
+Disallow: /reset
+Disallow: /forgot-password
+
+Sitemap: https://viewcontrol.xyz/sitemap.xml

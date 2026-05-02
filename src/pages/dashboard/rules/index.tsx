@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import Skeleton from 'react-loading-skeleton';
 import { Link } from 'react-router-dom';
 import { Button, Input, Switch, Dialog, useToast } from '../../../components/ui';
@@ -26,25 +27,76 @@ const ControlActionsMenu: React.FC<{
   onDelete: (rule: ApiControl) => void;
 }> = ({ rule, isOpen, onToggle, onEdit, onDelete }) => {
   const menuRef = React.useRef<HTMLDivElement>(null);
+  const buttonRef = React.useRef<HTMLButtonElement>(null);
+  const [position, setPosition] = React.useState({ top: 0, left: 0 });
 
   React.useEffect(() => {
     if (!isOpen) {
       return;
     }
 
+    const updatePosition = () => {
+      const rect = buttonRef.current?.getBoundingClientRect();
+
+      if (!rect) {
+        return;
+      }
+
+      setPosition({
+        top: rect.bottom + 6,
+        left: Math.max(12, rect.right - 152),
+      });
+    };
+
     const handlePointerDown = (event: MouseEvent) => {
-      if (!menuRef.current?.contains(event.target as Node)) {
+      const target = event.target as Node;
+
+      if (!menuRef.current?.contains(target) && !buttonRef.current?.contains(target)) {
         onToggle();
       }
     };
 
+    updatePosition();
     document.addEventListener('mousedown', handlePointerDown);
-    return () => document.removeEventListener('mousedown', handlePointerDown);
+    window.addEventListener('resize', updatePosition);
+    window.addEventListener('scroll', updatePosition, true);
+
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      window.removeEventListener('resize', updatePosition);
+      window.removeEventListener('scroll', updatePosition, true);
+    };
   }, [isOpen, onToggle]);
 
-  return (
-    <div className="relative inline-flex" ref={menuRef}>
+  const menu = (
+    <div
+      className="fixed z-[110] w-38 overflow-hidden rounded-lg border border-border bg-white p-1 text-left shadow-premium"
+      ref={menuRef}
+      style={{ top: position.top, left: position.left }}
+    >
       <button
+        type="button"
+        className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-[12px] font-medium text-neutral-700 transition-colors hover:bg-neutral-50 hover:text-black"
+        onClick={() => onEdit(rule)}
+      >
+        <Pencil size={13} />
+        Edit
+      </button>
+      <button
+        type="button"
+        className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-[12px] font-medium text-red-600 transition-colors hover:bg-red-50"
+        onClick={() => onDelete(rule)}
+      >
+        <Trash2 size={13} />
+        Delete
+      </button>
+    </div>
+  );
+
+  return (
+    <div className="inline-flex">
+      <button
+        ref={buttonRef}
         type="button"
         className="rounded-md p-1.5 text-neutral-300 transition-colors hover:bg-neutral-100 hover:text-black"
         onClick={onToggle}
@@ -54,26 +106,7 @@ const ControlActionsMenu: React.FC<{
         <MoreHorizontal size={14} />
       </button>
 
-      {isOpen && (
-        <div className="absolute right-0 top-full z-30 mt-1 w-38 overflow-hidden rounded-lg border border-border bg-white p-1 text-left shadow-premium">
-          <button
-            type="button"
-            className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-[12px] font-medium text-neutral-700 transition-colors hover:bg-neutral-50 hover:text-black"
-            onClick={() => onEdit(rule)}
-          >
-            <Pencil size={13} />
-            Edit
-          </button>
-          <button
-            type="button"
-            className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-[12px] font-medium text-red-600 transition-colors hover:bg-red-50"
-            onClick={() => onDelete(rule)}
-          >
-            <Trash2 size={13} />
-            Delete
-          </button>
-        </div>
-      )}
+      {isOpen && typeof document !== 'undefined' ? createPortal(menu, document.body) : null}
     </div>
   );
 };

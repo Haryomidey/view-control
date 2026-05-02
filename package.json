@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.14",
+    "@viewcontrol/runtime": "^0.2.0",
     "@vitejs/plugin-react": "^5.0.4",
     "axios": "^1.15.2",
     "bcryptjs": "^2.4.3",
