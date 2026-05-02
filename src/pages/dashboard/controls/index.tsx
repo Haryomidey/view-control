@@ -14,6 +14,103 @@ import {
 import { motion } from 'motion/react';
 import { ApiControl, ApiProject, controlsApi, getApiErrorMessage, projectsApi } from '../../../lib/api';
 
+const ProjectDropdown: React.FC<{
+  projects: ApiProject[];
+  selectedProjectId: string;
+  onChange: (projectId: string) => void;
+  isLoading: boolean;
+}> = ({ projects, selectedProjectId, onChange, isLoading }) => {
+  const [isOpen, setIsOpen] = React.useState(false);
+  const [query, setQuery] = React.useState('');
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const selectedProject = projects.find((project) => project.id === selectedProjectId);
+  const filteredProjects = projects.filter((project) => {
+    const value = `${project.name} ${project.domain}`.toLowerCase();
+    return value.includes(query.toLowerCase());
+  });
+
+  React.useEffect(() => {
+    const handlePointerDown = (event: MouseEvent) => {
+      if (!containerRef.current?.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handlePointerDown);
+    return () => document.removeEventListener('mousedown', handlePointerDown);
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="p-3 border border-border rounded-lg">
+        <Skeleton width="55%" height={14} />
+        <Skeleton width="70%" height={11} className="mt-2" />
+      </div>
+    );
+  }
+
+  if (projects.length === 0) {
+    return <p className="text-[12px] text-neutral-500">Create a project before saving controls.</p>;
+  }
+
+  return (
+    <div className="relative" ref={containerRef}>
+      <button
+        type="button"
+        onClick={() => setIsOpen((value) => !value)}
+        className="w-full p-3 text-left border border-border rounded-lg transition-all hover:border-neutral-300 bg-white"
+      >
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[12px] md:text-xs font-bold truncate">{selectedProject?.name || 'Select project'}</p>
+            <p className="text-[10px] text-neutral-500 truncate">{selectedProject?.domain || 'Choose where this control applies'}</p>
+          </div>
+          <span className={cn("text-neutral-400 text-xs transition-transform", isOpen && "rotate-180")}>⌄</span>
+        </div>
+      </button>
+
+      {isOpen && (
+        <div className="absolute z-30 mt-2 w-full overflow-hidden rounded-lg border border-border bg-white shadow-premium">
+          <div className="p-2 border-b border-border">
+            <Input
+              autoFocus
+              placeholder="Search projects..."
+              className="h-8 text-[12px]"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+            />
+          </div>
+          <div className="max-h-64 overflow-y-auto p-1">
+            {filteredProjects.map((project) => (
+              <button
+                key={project.id}
+                type="button"
+                onClick={() => {
+                  onChange(project.id);
+                  setIsOpen(false);
+                  setQuery('');
+                }}
+                className={cn(
+                  "w-full rounded-md px-3 py-2 text-left transition-colors",
+                  selectedProjectId === project.id ? "bg-neutral-50 text-black" : "hover:bg-neutral-50 text-neutral-600"
+                )}
+              >
+                <p className="text-[12px] font-bold truncate">{project.name}</p>
+                <p className="text-[10px] text-neutral-500 truncate">{project.domain}</p>
+              </button>
+            ))}
+            {filteredProjects.length === 0 && (
+              <div className="px-3 py-6 text-center">
+                <p className="text-[12px] font-medium text-neutral-500">No matching projects</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export const Controls: React.FC = () => {
   const toast = useToast();
   const [projects, setProjects] = useState<ApiProject[]>([]);
@@ -126,30 +223,12 @@ export const Controls: React.FC = () => {
             <div className="space-y-6">
               <div className="space-y-3">
                 <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-neutral-400">Target Project</label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {isLoadingProjects && Array.from({ length: 2 }).map((_, index) => (
-                    <div key={index} className="p-3 border border-border rounded-lg">
-                      <Skeleton width="55%" height={14} />
-                      <Skeleton width="70%" height={11} className="mt-2" />
-                    </div>
-                  ))}
-                  {projects.slice(0, 2).map((p) => (
-                    <button
-                      key={p.id}
-                      onClick={() => setSelectedProjectId(p.id)}
-                      className={cn(
-                        "p-3 text-left border rounded-lg transition-all",
-                        selectedProjectId === p.id 
-                          ? "border-black bg-neutral-50" 
-                          : "border-border hover:border-neutral-300"
-                      )}
-                    >
-                      <p className="text-[12px] md:text-xs font-bold">{p.name}</p>
-                      <p className="text-[10px] text-neutral-500">{p.domain}</p>
-                    </button>
-                  ))}
-                </div>
-                {!isLoadingProjects && projects.length === 0 && <p className="text-[12px] text-neutral-500">Create a project before saving controls.</p>}
+                <ProjectDropdown
+                  projects={projects}
+                  selectedProjectId={selectedProjectId}
+                  onChange={setSelectedProjectId}
+                  isLoading={isLoadingProjects}
+                />
               </div>
 
               <div className="space-y-3">

@@ -18,6 +18,25 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const runtimeDistPath = path.resolve(__dirname, '../..', 'packages/runtime/dist');
 
+const corsOptionsDelegate = (req, callback) => {
+  const isRuntimeRequest = req.path.startsWith('/api/runtime') || req.path.startsWith('/cdn');
+
+  callback(null, {
+    origin(origin, originCallback) {
+      if (!origin) {
+        return originCallback(null, true);
+      }
+
+      if (isRuntimeRequest || env.dashboardOrigins.includes(origin) || env.nodeEnv !== 'production') {
+        return originCallback(null, true);
+      }
+
+      return originCallback(null, false);
+    },
+    credentials: !isRuntimeRequest,
+  });
+};
+
 export const createApp = () => {
   const app = express();
 
@@ -32,20 +51,7 @@ export const createApp = () => {
   app.use(express.json({ limit: '200kb' }));
   app.use(express.urlencoded({ extended: true, limit: '200kb' }));
 
-  app.use(cors({
-    origin(origin, callback) {
-      if (!origin) {
-        return callback(null, true);
-      }
-
-      if (env.dashboardOrigins.includes(origin) || env.nodeEnv !== 'production') {
-        return callback(null, true);
-      }
-
-      callback(null, false);
-    },
-    credentials: true,
-  }));
+  app.use(cors(corsOptionsDelegate));
 
   app.get('/health', (req, res) => {
     res.json({ ok: true, data: { service: 'viewcontrol-api', status: 'healthy' } });

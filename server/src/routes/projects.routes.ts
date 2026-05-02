@@ -8,7 +8,7 @@ import { requireAuth } from '../middleware/auth.js';
 import { httpError } from '../utils/httpError.js';
 import { createProjectKey } from '../utils/ids.js';
 import { env } from '../config/env.js';
-import { normalizeDomain } from '../utils/runtime.js';
+import { normalizeDomain, uniqueDomains } from '../utils/runtime.js';
 
 const router = Router();
 
@@ -43,11 +43,14 @@ router.post('/', asyncHandler(async (req, res) => {
     throw httpError(400, 'Project name and domain are required.', 'INVALID_PROJECT_INPUT');
   }
 
+  const normalizedDomain = normalizeDomain(domain);
+  const normalizedAllowedDomains = uniqueDomains([normalizedDomain, ...allowedDomains]);
+
   const project = await Project.create({
     ownerId: req.user._id,
     name,
-    domain: normalizeDomain(domain),
-    allowedDomains: allowedDomains.map(normalizeDomain).filter(Boolean),
+    domain: normalizedDomain,
+    allowedDomains: normalizedAllowedDomains,
     projectKey: createProjectKey(),
   });
 

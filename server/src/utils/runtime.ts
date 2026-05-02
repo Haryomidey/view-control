@@ -8,9 +8,13 @@ export const normalizeDomain = (value = '') => {
     .trim();
 };
 
+export const uniqueDomains = (values = []) => {
+  return Array.from(new Set(values.map(normalizeDomain).filter(Boolean)));
+};
+
 export const isDomainAllowed = (project, originOrUrl = '') => {
   if (!originOrUrl) {
-    return true;
+    return false;
   }
 
   let hostname = '';
@@ -22,7 +26,7 @@ export const isDomainAllowed = (project, originOrUrl = '') => {
   }
 
   const normalized = normalizeDomain(hostname);
-  const allowed = new Set([project.domain, ...(project.allowedDomains || [])].map(normalizeDomain));
+  const allowed = new Set([project.domain, ...(project.allowedDomains || [])].map(normalizeDomain).filter(Boolean));
 
   return allowed.has(normalized);
 };

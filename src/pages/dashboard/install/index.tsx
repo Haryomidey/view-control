@@ -114,7 +114,7 @@ export const Install: React.FC = () => {
           </p>
           <CodeSnippet 
             language="HTML/Javascript"
-            code={`<script\n  src="${VIEWCONTROL_CDN_URL}"\n  data-project-id="${projectKey}"\n  data-api-url="${VIEWCONTROL_API_URL}"\n  async\n></script>`} 
+            code={`<script\n  src="${VIEWCONTROL_CDN_URL}"\n  data-project-id="${projectKey}"\n  data-api-url="${VIEWCONTROL_API_URL}"\n  data-debug="false"\n  async\n></script>`} 
           />
         </section>
 
@@ -132,7 +132,7 @@ export const Install: React.FC = () => {
             <CodeSnippet language="Terminal" code="npm install @viewcontrol/runtime" />
             <CodeSnippet 
               language="TypeScript / Javascript" 
-              code={`import { init } from '@viewcontrol/runtime';\n\ninit({\n  projectId: '${projectKey}',\n  apiUrl: '${VIEWCONTROL_API_URL}',\n  debug: import.meta.env.DEV\n});`} 
+              code={`import { init } from '@viewcontrol/runtime';\n\ninit({\n  projectId: '${projectKey}',\n  apiUrl: '${VIEWCONTROL_API_URL}',\n  debug: false\n});`} 
             />
           </div>
         </section>

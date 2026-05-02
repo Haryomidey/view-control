@@ -7,12 +7,18 @@ import { asyncHandler } from '../middleware/asyncHandler.js';
 import { rateLimit } from '../middleware/rateLimiter.js';
 import { httpError } from '../utils/httpError.js';
 import { isDomainAllowed, serializeBanner, serializeControl } from '../utils/runtime.js';
+import { env } from '../config/env.js';
 
 const router = Router();
+const runtimeEventTypes = new Set(['load', 'apply', 'error']);
+
+const getRequestSource = (req, fallbackUrl = '') => {
+  return req.headers.origin || req.headers.referer || (env.nodeEnv === 'production' ? '' : fallbackUrl) || '';
+};
 
 router.get('/config', rateLimit({ max: 600 }), asyncHandler(async (req, res) => {
   const projectKey = req.query.projectId || req.query.projectKey;
-  const pageUrl = req.query.url || req.headers.origin || '';
+  const pageUrl = String(req.query.url || '');
 
   if (!projectKey) {
     throw httpError(400, 'projectId is required.', 'MISSING_PROJECT_ID');
@@ -24,7 +30,7 @@ router.get('/config', rateLimit({ max: 600 }), asyncHandler(async (req, res) => 
     throw httpError(404, 'Project not found.', 'PROJECT_NOT_FOUND');
   }
 
-  if (!isDomainAllowed(project, pageUrl)) {
+  if (!isDomainAllowed(project, getRequestSource(req, pageUrl))) {
     throw httpError(403, 'This domain is not allowed for the project.', 'DOMAIN_NOT_ALLOWED');
   }
 
@@ -59,13 +65,29 @@ router.get('/config', rateLimit({ max: 600 }), asyncHandler(async (req, res) => 
 router.post('/events', rateLimit({ max: 1000 }), asyncHandler(async (req, res) => {
   const { projectId, projectKey, type, url, payload } = req.body || {};
 
-  if (!type) {
+  if (!runtimeEventTypes.has(type)) {
     throw httpError(400, 'Event type is required.', 'INVALID_RUNTIME_EVENT');
   }
 
+  if (!projectKey && !projectId) {
+    throw httpError(400, 'Project key is required.', 'MISSING_PROJECT_ID');
+  }
+
+  const project = projectKey
+    ? await Project.findOne({ projectKey, status: { $ne: 'disabled' } })
+    : await Project.findOne({ _id: projectId, status: { $ne: 'disabled' } });
+
+  if (!project) {
+    throw httpError(404, 'Project not found.', 'PROJECT_NOT_FOUND');
+  }
+
+  if (!isDomainAllowed(project, getRequestSource(req, url))) {
+    throw httpError(403, 'This domain is not allowed for the project.', 'DOMAIN_NOT_ALLOWED');
+  }
+
   await RuntimeEvent.create({
-    projectId: projectId || undefined,
-    projectKey,
+    projectId: project._id,
+    projectKey: project.projectKey,
     type,
     url,
     payload,
