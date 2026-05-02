@@ -19,7 +19,7 @@ export const Login: React.FC = () => {
 
     try {
       await authApi.login({ email, password });
-      navigate('/');
+      navigate('/dashboard');
     } catch (err) {
       setError(getApiErrorMessage(err, 'Unable to log in.'));
     } finally {

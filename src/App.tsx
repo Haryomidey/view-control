@@ -1,5 +1,8 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AppLayout } from './components/layout/AppLayout';
+import { Home } from './pages/public/home';
+import { Docs } from './pages/public/docs';
 import { Overview } from './pages/dashboard/overview';
 import { Projects } from './pages/dashboard/projects';
 import { Controls } from './pages/dashboard/controls';
@@ -20,11 +23,25 @@ const ProtectedRoute = () => {
   return localStorage.getItem(AUTH_TOKEN_KEY) ? <AppLayout /> : <Navigate to="/login" replace />;
 };
 
+const ScrollToTop = () => {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, [pathname]);
+
+  return null;
+};
+
 export default function App() {
   return (
     <ToastProvider>
       <BrowserRouter>
+        <ScrollToTop />
         <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/docs" element={<Docs />} />
+
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/verify-otp" element={<VerifyOtp />} />
@@ -32,17 +49,17 @@ export default function App() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
 
           <Route element={<ProtectedRoute />}>
-            <Route path="/" element={<Overview />} />
-            <Route path="/projects" element={<Projects />} />
-            <Route path="/controls" element={<Controls />} />
-            <Route path="/rules" element={<Rules />} />
-            <Route path="/banners" element={<Banners />} />
-            <Route path="/activity" element={<Activity />} />
-            <Route path="/install" element={<Install />} />
-            <Route path="/settings" element={<Settings />} />
-            {/* Catch all to home */}
-            <Route path="*" element={<Navigate to="/" replace />} />
+            <Route path="/dashboard" element={<Overview />} />
+            <Route path="/dashboard/projects" element={<Projects />} />
+            <Route path="/dashboard/controls" element={<Controls />} />
+            <Route path="/dashboard/rules" element={<Rules />} />
+            <Route path="/dashboard/banners" element={<Banners />} />
+            <Route path="/dashboard/activity" element={<Activity />} />
+            <Route path="/dashboard/install" element={<Install />} />
+            <Route path="/dashboard/settings" element={<Settings />} />
           </Route>
+
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
     </ToastProvider>

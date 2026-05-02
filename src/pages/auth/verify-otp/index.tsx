@@ -14,7 +14,7 @@ export const VerifyOtp: React.FC = () => {
     >
       <form className="space-y-4" onSubmit={(event) => {
         event.preventDefault();
-        navigate('/');
+        navigate('/dashboard');
       }}>
         <div className="space-y-1.5">
           <label className="text-[10px] md:text-[11px] font-bold uppercase tracking-widest text-neutral-400">One-Time Code</label>

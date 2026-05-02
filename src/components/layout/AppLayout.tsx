@@ -20,16 +20,17 @@ import {
 import { cn } from '../../lib/utils';
 import { Dialog, Input } from '../ui';
 import { ApiProject, authApi, projectsApi } from '../../lib/api';
+import { BrandMark } from '../BrandMark';
 
 const sidebarLinks = [
-  { name: 'Overview', icon: BarChart3, path: '/' },
-  { name: 'Projects', icon: Box, path: '/projects' },
-  { name: 'Controls', icon: Zap, path: '/controls' },
-  { name: 'Rules', icon: Terminal, path: '/rules' },
-  { name: 'Banners', icon: Bell, path: '/banners' },
-  { name: 'Activity', icon: History, path: '/activity' },
-  { name: 'Install', icon: Code2, path: '/install' },
-  { name: 'Settings', icon: Settings, path: '/settings' },
+  { name: 'Overview', icon: BarChart3, path: '/dashboard' },
+  { name: 'Projects', icon: Box, path: '/dashboard/projects' },
+  { name: 'Controls', icon: Zap, path: '/dashboard/controls' },
+  { name: 'Rules', icon: Terminal, path: '/dashboard/rules' },
+  { name: 'Banners', icon: Bell, path: '/dashboard/banners' },
+  { name: 'Activity', icon: History, path: '/dashboard/activity' },
+  { name: 'Install', icon: Code2, path: '/dashboard/install' },
+  { name: 'Settings', icon: Settings, path: '/dashboard/settings' },
 ];
 
 export const AppLayout: React.FC = () => {
@@ -70,7 +71,7 @@ export const AppLayout: React.FC = () => {
 
   const handleAddProject = () => {
     setIsProjectDropdownOpen(false);
-    navigate('/projects?addProject=true');
+    navigate('/dashboard/projects?addProject=true');
   };
 
   const handleLogout = () => {
@@ -101,6 +102,7 @@ export const AppLayout: React.FC = () => {
                <NavLink 
                  key={link.path}
                  to={link.path}
+                 end={link.path === '/dashboard'}
                  onClick={() => setIsSearchOpen(false)}
                  className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-neutral-50 transition-colors text-sm font-medium text-black"
                >
@@ -118,9 +120,7 @@ export const AppLayout: React.FC = () => {
       {/* Sidebar - Desktop */}
       <aside className="hidden md:flex w-60 flex-col border-r border-border h-screen py-6 px-4">
         <div className="flex items-center gap-2 mb-8 px-2">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-black">
-            <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/><path d="M3 9h18"/>
-          </svg>
+          <BrandMark />
           <span className="font-bold text-[18px] tracking-[-0.03em]">ViewControl</span>
         </div>
 
@@ -129,6 +129,7 @@ export const AppLayout: React.FC = () => {
             <NavLink
               key={link.path}
               to={link.path}
+              end={link.path === '/dashboard'}
               className={({ isActive }) => cn(
                 "flex items-center gap-3 px-3 py-2 rounded-md font-medium transition-all duration-200 text-[13px]",
                 isActive 
@@ -164,9 +165,7 @@ export const AppLayout: React.FC = () => {
             >
               <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-2">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-black">
-                    <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/><path d="M3 9h18"/>
-                  </svg>
+                  <BrandMark />
                   <span className="font-bold text-[18px] tracking-[-0.03em]">ViewControl</span>
                 </div>
                 <button onClick={() => setIsSidebarOpen(false)} className="text-neutral-500">
@@ -179,6 +178,7 @@ export const AppLayout: React.FC = () => {
                   <NavLink
                     key={link.path}
                     to={link.path}
+                    end={link.path === '/dashboard'}
                     onClick={() => setIsSidebarOpen(false)}
                     className={({ isActive }) => cn(
                       "flex items-center gap-3 px-3 py-2 rounded-md font-medium transition-all duration-200 text-[13px]",

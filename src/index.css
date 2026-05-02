@@ -17,7 +17,7 @@
 
 @layer base {
   body {
-    @apply bg-white text-black font-sans antialiased selection:bg-black selection:text-white h-full overflow-hidden;
+    @apply bg-white text-black font-sans antialiased selection:bg-black selection:text-white min-h-screen;
   }
   button {
     @apply cursor-pointer;

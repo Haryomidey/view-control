@@ -20,7 +20,7 @@ export const Signup: React.FC = () => {
 
     try {
       await authApi.signup({ name, email, password });
-      navigate('/');
+      navigate('/dashboard');
     } catch (err) {
       setError(getApiErrorMessage(err, 'Unable to create account.'));
     } finally {
