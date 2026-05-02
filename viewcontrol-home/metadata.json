@@ -1,6 +1,0 @@
-{
-  "name": "ViewControl",
-  "description": "Remotely manage website selectors, banners, and changes from a central dashboard.",
-  "requestFramePermissions": [],
-  "majorCapabilities": []
-}

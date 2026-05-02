@@ -124,7 +124,7 @@ init({
           <section id="options" className="scroll-mt-24">
             <h2 className="border-b border-border pb-3 text-[18px] font-black sm:pb-4 sm:text-[20px]">Runtime Options</h2>
             <div className="mt-5 overflow-x-auto rounded-lg border border-border">
-              <table className="min-w-[640px] w-full text-left text-[11px] sm:text-[12px]">
+              <table className="min-w-160 w-full text-left text-[11px] sm:text-[12px]">
                 <thead className="border-b border-border bg-neutral-50">
                   <tr>
                     <th className="px-3 py-3 font-bold sm:px-4">Option</th>
