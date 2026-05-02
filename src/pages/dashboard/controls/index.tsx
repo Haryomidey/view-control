@@ -244,6 +244,11 @@ export const Controls: React.FC = () => {
               </div>
 
               <div className="space-y-3">
+                <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-neutral-400">Rule Name</label>
+                <Input placeholder="e.g. Hide hero banner" value={ruleName} onChange={(event) => setRuleName(event.target.value)} />
+              </div>
+
+              <div className="space-y-3">
                 <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-neutral-400">Page Path</label>
                 <div className="flex bg-neutral-50 border border-border rounded-lg overflow-hidden h-10 px-3 items-center">
                   <span className="text-neutral-400 text-sm">/</span>
