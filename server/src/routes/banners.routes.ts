@@ -9,7 +9,19 @@ const router = Router();
 
 router.use(requireAuth);
 
-const serialize = (banner) => ({
+interface BannerDocumentLike {
+  _id: unknown;
+  projectId: unknown;
+  message: string;
+  tone: string;
+  position: string;
+  pathPattern: string;
+  isActive: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+const serialize = (banner: BannerDocumentLike) => ({
   id: String(banner._id),
   projectId: String(banner.projectId),
   message: banner.message,
@@ -22,7 +34,8 @@ const serialize = (banner) => ({
 });
 
 router.get('/', asyncHandler(async (req, res) => {
-  const query: Record<string, unknown> = { ownerId: req.user._id };
+  const user = req.user!;
+  const query: Record<string, unknown> = { ownerId: user._id };
 
   if (req.query.projectId) {
     query.projectId = req.query.projectId;
@@ -34,20 +47,21 @@ router.get('/', asyncHandler(async (req, res) => {
 }));
 
 router.post('/', asyncHandler(async (req, res) => {
+  const user = req.user!;
   const { projectId, message, tone = 'neutral', position = 'top', pathPattern = '*', isActive = true } = req.body || {};
 
   if (!projectId || !message) {
     throw httpError(400, 'Project and message are required.', 'INVALID_BANNER_INPUT');
   }
 
-  const project = await Project.findOne({ _id: projectId, ownerId: req.user._id });
+  const project = await Project.findOne({ _id: projectId, ownerId: user._id });
 
   if (!project) {
     throw httpError(404, 'Project not found.', 'PROJECT_NOT_FOUND');
   }
 
   const banner = await Banner.create({
-    ownerId: req.user._id,
+    ownerId: user._id,
     projectId,
     message,
     tone,
@@ -60,8 +74,9 @@ router.post('/', asyncHandler(async (req, res) => {
 }));
 
 router.patch('/:bannerId', asyncHandler(async (req, res) => {
+  const user = req.user!;
   const banner = await Banner.findOneAndUpdate(
-    { _id: req.params.bannerId, ownerId: req.user._id },
+    { _id: req.params.bannerId, ownerId: user._id },
     { $set: req.body },
     { new: true, runValidators: true },
   );
@@ -74,7 +89,8 @@ router.patch('/:bannerId', asyncHandler(async (req, res) => {
 }));
 
 router.delete('/:bannerId', asyncHandler(async (req, res) => {
-  const banner = await Banner.findOneAndDelete({ _id: req.params.bannerId, ownerId: req.user._id });
+  const user = req.user!;
+  const banner = await Banner.findOneAndDelete({ _id: req.params.bannerId, ownerId: user._id });
 
   if (!banner) {
     throw httpError(404, 'Banner not found.', 'BANNER_NOT_FOUND');

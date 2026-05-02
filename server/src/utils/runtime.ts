@@ -1,3 +1,26 @@
+type ProjectLike = {
+  domain: string;
+  allowedDomains?: string[];
+};
+
+type ControlLike = {
+  _id: unknown;
+  name: string;
+  selector: string;
+  pathPattern?: string;
+  action: string;
+  value?: unknown;
+  priority?: number;
+};
+
+type BannerLike = {
+  _id: unknown;
+  message: string;
+  tone?: string;
+  position?: string;
+  pathPattern?: string;
+};
+
 export const normalizeDomain = (value = '') => {
   return String(value)
     .replace(/^https?:\/\//i, '')
@@ -8,11 +31,11 @@ export const normalizeDomain = (value = '') => {
     .trim();
 };
 
-export const uniqueDomains = (values = []) => {
+export const uniqueDomains = (values: string[] = []) => {
   return Array.from(new Set(values.map(normalizeDomain).filter(Boolean)));
 };
 
-export const isDomainAllowed = (project, originOrUrl = '') => {
+export const isDomainAllowed = (project: ProjectLike, originOrUrl = '') => {
   if (!originOrUrl) {
     return false;
   }
@@ -31,7 +54,7 @@ export const isDomainAllowed = (project, originOrUrl = '') => {
   return allowed.has(normalized);
 };
 
-export const serializeControl = (control) => ({
+export const serializeControl = (control: ControlLike) => ({
   id: String(control._id),
   name: control.name,
   selector: control.selector,
@@ -41,7 +64,7 @@ export const serializeControl = (control) => ({
   priority: control.priority,
 });
 
-export const serializeBanner = (banner) => ({
+export const serializeBanner = (banner: BannerLike) => ({
   id: String(banner._id),
   message: banner.message,
   tone: banner.tone,

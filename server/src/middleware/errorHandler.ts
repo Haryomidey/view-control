@@ -1,6 +1,7 @@
+import type { NextFunction, Request, Response } from 'express';
 import type { HttpError } from '../utils/httpError.js';
 
-export const notFound = (req, res) => {
+export const notFound = (req: Request, res: Response) => {
   res.status(404).json({
     ok: false,
     error: {
@@ -10,7 +11,7 @@ export const notFound = (req, res) => {
   });
 };
 
-export const errorHandler = (err: HttpError, req, res, next) => {
+export const errorHandler = (err: HttpError, req: Request, res: Response, next: NextFunction) => {
   if (res.headersSent) {
     return next(err);
   }

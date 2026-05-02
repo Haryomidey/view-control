@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { Dialog, Input } from '../ui';
-import { ApiProject, authApi, projectsApi } from '../../lib/api';
+import { ApiProject, ApiUser, AUTH_USER_KEY, authApi, projectsApi } from '../../lib/api';
 import { BrandMark } from '../BrandMark';
 
 const sidebarLinks = [
@@ -33,12 +33,33 @@ const sidebarLinks = [
   { name: 'Settings', icon: Settings, path: '/dashboard/settings' },
 ];
 
+const getStoredUser = (): ApiUser | null => {
+  try {
+    const stored = localStorage.getItem(AUTH_USER_KEY);
+    return stored ? JSON.parse(stored) as ApiUser : null;
+  } catch {
+    return null;
+  }
+};
+
+const getInitials = (user: ApiUser | null) => {
+  const source = user?.name?.trim() || user?.email?.trim() || 'VC';
+  const parts = source.split(/\s+/).filter(Boolean);
+
+  if (parts.length >= 2) {
+    return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+  }
+
+  return source.slice(0, 2).toUpperCase();
+};
+
 export const AppLayout: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isProjectDropdownOpen, setIsProjectDropdownOpen] = useState(false);
   const [projects, setProjects] = useState<ApiProject[]>([]);
   const [selectedProject, setSelectedProject] = useState("No project selected");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [user, setUser] = useState<ApiUser | null>(getStoredUser);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
   const navigate = useNavigate();
@@ -50,6 +71,14 @@ export const AppLayout: React.FC = () => {
 
   useEffect(() => {
     let isMounted = true;
+
+    authApi.me()
+      .then((currentUser) => {
+        if (isMounted) {
+          setUser(currentUser);
+        }
+      })
+      .catch(() => undefined);
 
     projectsApi.list()
       .then((items) => {
@@ -264,8 +293,12 @@ export const AppLayout: React.FC = () => {
             >
               <Search size={18} />
             </button>
-            <div className="w-8 h-8 rounded-full bg-black flex items-center justify-center text-white text-[10px] font-bold shrink-0">
-              JD
+            <div
+              className="w-8 h-8 rounded-full bg-black flex items-center justify-center text-white text-[10px] font-bold shrink-0"
+              title={user?.name || user?.email || 'ViewControl user'}
+              aria-label={user?.name || user?.email || 'ViewControl user'}
+            >
+              {getInitials(user)}
             </div>
             <button
               onClick={handleLogout}

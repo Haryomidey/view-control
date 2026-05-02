@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import type { Request } from 'express';
 import { Project } from '../models/Project.js';
 import { Control } from '../models/Control.js';
 import { Banner } from '../models/Banner.js';
@@ -12,7 +13,7 @@ import { env } from '../config/env.js';
 const router = Router();
 const runtimeEventTypes = new Set(['load', 'apply', 'error']);
 
-const getRequestSource = (req, fallbackUrl = '') => {
+const getRequestSource = (req: Request, fallbackUrl = '') => {
   return req.headers.origin || req.headers.referer || (env.nodeEnv === 'production' ? '' : fallbackUrl) || '';
 };
 

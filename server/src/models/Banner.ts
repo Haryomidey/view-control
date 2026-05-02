@@ -1,6 +1,21 @@
 import mongoose from 'mongoose';
 
-const bannerSchema = new mongoose.Schema(
+export type BannerTone = 'neutral' | 'success' | 'warning' | 'critical';
+export type BannerPosition = 'top' | 'bottom';
+
+export interface IBanner {
+  ownerId: mongoose.Types.ObjectId;
+  projectId: mongoose.Types.ObjectId;
+  message: string;
+  tone: BannerTone;
+  position: BannerPosition;
+  pathPattern: string;
+  isActive: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+const bannerSchema = new mongoose.Schema<IBanner>(
   {
     ownerId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -47,4 +62,4 @@ const bannerSchema = new mongoose.Schema(
 
 bannerSchema.index({ projectId: 1, isActive: 1 });
 
-export const Banner = mongoose.model('Banner', bannerSchema);
+export const Banner = mongoose.model<IBanner>('Banner', bannerSchema);

@@ -1,5 +1,7 @@
 import express from 'express';
 import cors from 'cors';
+import type { CorsOptions, CorsOptionsDelegate } from 'cors';
+import type { Request } from 'express';
 import helmet from 'helmet';
 import compression from 'compression';
 import morgan from 'morgan';
@@ -18,10 +20,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const runtimeDistPath = path.resolve(__dirname, '../..', 'packages/runtime/dist');
 
-const corsOptionsDelegate = (req, callback) => {
+const corsOptionsDelegate: CorsOptionsDelegate<Request> = (req, callback) => {
   const isRuntimeRequest = req.path.startsWith('/api/runtime') || req.path.startsWith('/cdn');
 
-  callback(null, {
+  const options: CorsOptions = {
     origin(origin, originCallback) {
       if (!origin) {
         return originCallback(null, true);
@@ -34,7 +36,9 @@ const corsOptionsDelegate = (req, callback) => {
       return originCallback(null, false);
     },
     credentials: !isRuntimeRequest,
-  });
+  };
+
+  callback(null, options);
 };
 
 export const createApp = () => {
@@ -53,7 +57,7 @@ export const createApp = () => {
 
   app.use(cors(corsOptionsDelegate));
 
-  app.get('/health', (req, res) => {
+  app.get('/health', (_req, res) => {
     res.json({ ok: true, data: { service: 'viewcontrol-api', status: 'healthy' } });
   });
 

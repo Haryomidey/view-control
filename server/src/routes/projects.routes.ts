@@ -14,7 +14,19 @@ const router = Router();
 
 router.use(requireAuth);
 
-const serializeProject = (project) => ({
+interface ProjectDocumentLike {
+  _id: unknown;
+  name: string;
+  domain: string;
+  allowedDomains: string[];
+  projectKey: string;
+  status: string;
+  lastSeenAt?: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+const serializeProject = (project: ProjectDocumentLike) => ({
   id: String(project._id),
   name: project.name,
   domain: project.domain,
@@ -31,12 +43,14 @@ const serializeProject = (project) => ({
 });
 
 router.get('/', asyncHandler(async (req, res) => {
-  const projects = await Project.find({ ownerId: req.user._id }).sort({ createdAt: -1 }).lean();
+  const user = req.user!;
+  const projects = await Project.find({ ownerId: user._id }).sort({ createdAt: -1 }).lean();
 
   res.json({ ok: true, data: { projects: projects.map(serializeProject) } });
 }));
 
 router.post('/', asyncHandler(async (req, res) => {
+  const user = req.user!;
   const { name, domain, allowedDomains = [] } = req.body || {};
 
   if (!name || !domain) {
@@ -47,7 +61,7 @@ router.post('/', asyncHandler(async (req, res) => {
   const normalizedAllowedDomains = uniqueDomains([normalizedDomain, ...allowedDomains]);
 
   const project = await Project.create({
-    ownerId: req.user._id,
+    ownerId: user._id,
     name,
     domain: normalizedDomain,
     allowedDomains: normalizedAllowedDomains,
@@ -58,7 +72,8 @@ router.post('/', asyncHandler(async (req, res) => {
 }));
 
 router.get('/:projectId', asyncHandler(async (req, res) => {
-  const project = await Project.findOne({ _id: req.params.projectId, ownerId: req.user._id });
+  const user = req.user!;
+  const project = await Project.findOne({ _id: req.params.projectId, ownerId: user._id });
 
   if (!project) {
     throw httpError(404, 'Project not found.', 'PROJECT_NOT_FOUND');
@@ -68,7 +83,8 @@ router.get('/:projectId', asyncHandler(async (req, res) => {
 }));
 
 router.delete('/:projectId', asyncHandler(async (req, res) => {
-  const project = await Project.findOneAndDelete({ _id: req.params.projectId, ownerId: req.user._id });
+  const user = req.user!;
+  const project = await Project.findOneAndDelete({ _id: req.params.projectId, ownerId: user._id });
 
   if (!project) {
     throw httpError(404, 'Project not found.', 'PROJECT_NOT_FOUND');

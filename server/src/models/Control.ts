@@ -1,6 +1,22 @@
 import mongoose from 'mongoose';
 
-const controlSchema = new mongoose.Schema(
+export type ControlAction = 'hide' | 'show' | 'text' | 'replace' | 'html' | 'opacity' | 'display' | 'class' | 'style';
+
+export interface IControl {
+  ownerId: mongoose.Types.ObjectId;
+  projectId: mongoose.Types.ObjectId;
+  name: string;
+  selector: string;
+  pathPattern: string;
+  action: ControlAction;
+  value?: unknown;
+  priority: number;
+  isActive: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+const controlSchema = new mongoose.Schema<IControl>(
   {
     ownerId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -57,4 +73,4 @@ const controlSchema = new mongoose.Schema(
 
 controlSchema.index({ projectId: 1, isActive: 1, priority: 1 });
 
-export const Control = mongoose.model('Control', controlSchema);
+export const Control = mongoose.model<IControl>('Control', controlSchema);

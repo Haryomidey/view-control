@@ -1,6 +1,17 @@
 import mongoose from 'mongoose';
 
-const runtimeEventSchema = new mongoose.Schema(
+export interface IRuntimeEvent {
+  projectId?: mongoose.Types.ObjectId;
+  projectKey?: string;
+  type: 'load' | 'apply' | 'error';
+  url?: string;
+  userAgent?: string;
+  payload?: unknown;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+const runtimeEventSchema = new mongoose.Schema<IRuntimeEvent>(
   {
     projectId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -26,4 +37,4 @@ const runtimeEventSchema = new mongoose.Schema(
 
 runtimeEventSchema.index({ createdAt: -1 });
 
-export const RuntimeEvent = mongoose.model('RuntimeEvent', runtimeEventSchema);
+export const RuntimeEvent = mongoose.model<IRuntimeEvent>('RuntimeEvent', runtimeEventSchema);
