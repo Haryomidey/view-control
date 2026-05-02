@@ -14,6 +14,11 @@ import { VerifyOtp } from './pages/auth/verify-otp';
 import { Reset } from './pages/auth/reset';
 import { ForgotPassword } from './pages/auth/forgot-password';
 import { ToastProvider } from './components/ui';
+import { AUTH_TOKEN_KEY } from './lib/api';
+
+const ProtectedRoute = () => {
+  return localStorage.getItem(AUTH_TOKEN_KEY) ? <AppLayout /> : <Navigate to="/login" replace />;
+};
 
 export default function App() {
   return (
@@ -26,7 +31,7 @@ export default function App() {
           <Route path="/reset" element={<Reset />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
 
-          <Route element={<AppLayout />}>
+          <Route element={<ProtectedRoute />}>
             <Route path="/" element={<Overview />} />
             <Route path="/projects" element={<Projects />} />
             <Route path="/controls" element={<Controls />} />

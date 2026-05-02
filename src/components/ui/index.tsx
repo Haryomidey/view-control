@@ -87,18 +87,20 @@ export const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttribute
   }
 );
 
-export const Switch: React.FC<{ checked?: boolean; onChange?: (checked: boolean) => void; label?: string }> = ({ 
+export const Switch: React.FC<{ checked?: boolean; onChange?: (checked: boolean) => void; label?: string; disabled?: boolean }> = ({ 
   checked, 
   onChange,
-  label
+  label,
+  disabled
 }) => {
   return (
-    <label className="inline-flex items-center cursor-pointer group">
+    <label className={cn("inline-flex items-center group", disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer")}>
       <div className="relative">
         <input 
           type="checkbox" 
           className="sr-only" 
           checked={checked} 
+          disabled={disabled}
           onChange={(e) => onChange?.(e.target.checked)} 
         />
         <div className={cn(

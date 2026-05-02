@@ -1,4 +1,4 @@
-export type ProjectStatus = 'connected' | 'disconnected';
+export type ProjectStatus = 'connected' | 'pending' | 'disabled' | 'disconnected';
 
 export interface Project {
   id: string;
@@ -6,9 +6,10 @@ export interface Project {
   domain: string;
   status: ProjectStatus;
   lastUpdated: string;
+  projectKey?: string;
 }
 
-export type ActionType = 'hide' | 'show' | 'opacity' | 'display' | 'add_text' | 'replace_text';
+export type ActionType = 'hide' | 'show' | 'opacity' | 'display' | 'add_text' | 'replace_text' | 'text' | 'replace' | 'html' | 'class' | 'style';
 
 export interface ControlRule {
   id: string;
@@ -29,7 +30,7 @@ export interface Banner {
   id: string;
   name: string;
   message: string;
-  position: BannerPosition;
+  position: BannerPosition | 'top' | 'bottom';
   targetPage: string;
   enabled: boolean;
   projectId: string;

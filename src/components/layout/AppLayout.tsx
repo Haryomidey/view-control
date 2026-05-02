@@ -14,10 +14,12 @@ import {
   ChevronRight,
   Menu,
   X,
-  History
+  History,
+  LogOut
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { Dialog, Input } from '../ui';
+import { ApiProject, authApi, projectsApi } from '../../lib/api';
 
 const sidebarLinks = [
   { name: 'Overview', icon: BarChart3, path: '/' },
@@ -33,26 +35,47 @@ const sidebarLinks = [
 export const AppLayout: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isProjectDropdownOpen, setIsProjectDropdownOpen] = useState(false);
-  const [selectedProject, setSelectedProject] = useState("viewcontrol-landing.com");
+  const [projects, setProjects] = useState<ApiProject[]>([]);
+  const [selectedProject, setSelectedProject] = useState("No project selected");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
   const navigate = useNavigate();
-
-  const projects = [
-    "viewcontrol-landing.com",
-    "app.viewcontrol.dev",
-    "marketing.site.io"
-  ];
 
   useEffect(() => {
     scrollContainerRef.current?.scrollTo({ top: 0, left: 0 });
     window.scrollTo({ top: 0, left: 0 });
   }, [location.pathname]);
 
+  useEffect(() => {
+    let isMounted = true;
+
+    projectsApi.list()
+      .then((items) => {
+        if (isMounted) {
+          setProjects(items);
+          setSelectedProject(items[0]?.domain || 'No project selected');
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setProjects([]);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const handleAddProject = () => {
     setIsProjectDropdownOpen(false);
     navigate('/projects?addProject=true');
+  };
+
+  const handleLogout = () => {
+    authApi.logout();
+    navigate('/login', { replace: true });
   };
 
   return (
@@ -207,17 +230,17 @@ export const AppLayout: React.FC = () => {
                        <div className="p-2 space-y-1">
                          {projects.map((p) => (
                            <button
-                             key={p}
+                             key={p.id}
                              onClick={() => {
-                               setSelectedProject(p);
+                               setSelectedProject(p.domain);
                                setIsProjectDropdownOpen(false);
                              }}
                              className={cn(
                                "w-full text-left px-3 py-2 text-[13px] hover:bg-neutral-50 rounded-md transition-colors font-medium",
-                               selectedProject === p ? "bg-neutral-50 text-black font-bold" : "text-neutral-500"
+                               selectedProject === p.domain ? "bg-neutral-50 text-black font-bold" : "text-neutral-500"
                              )}
                            >
-                             {p}
+                             {p.domain}
                            </button>
                          ))}
                          <button
@@ -244,6 +267,13 @@ export const AppLayout: React.FC = () => {
             <div className="w-8 h-8 rounded-full bg-black flex items-center justify-center text-white text-[10px] font-bold shrink-0">
               JD
             </div>
+            <button
+              onClick={handleLogout}
+              className="text-neutral-400 cursor-pointer hover:text-black transition-colors p-1"
+              title="Log out"
+            >
+              <LogOut size={17} />
+            </button>
           </div>
         </header>
 

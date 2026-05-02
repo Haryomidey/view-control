@@ -1,28 +1,123 @@
 import React, { useState } from 'react';
+import Skeleton from 'react-loading-skeleton';
 import { Card, Button, Input, Switch, Badge, Dialog } from '../../../components/ui';
 import { Search, Bell, Monitor, Smartphone, Plus, ArrowRight, MessageSquare, Layout } from 'lucide-react';
-import { banners } from '../../../lib/data';
 import { motion } from 'motion/react';
+import { ApiBanner, ApiProject, bannersApi, getApiErrorMessage, projectsApi } from '../../../lib/api';
+
+const bannerName = (banner: ApiBanner) => banner.message.split(/\s+/).slice(0, 3).join(' ') || 'Untitled banner';
 
 export const Banners: React.FC = () => {
-  const [activeBannerId, setActiveBannerId] = useState(banners[0].id);
+  const [banners, setBanners] = useState<ApiBanner[]>([]);
+  const [projects, setProjects] = useState<ApiProject[]>([]);
+  const [activeBannerId, setActiveBannerId] = useState('');
   const [isNewBannerOpen, setIsNewBannerOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [bannerMessages, setBannerMessages] = useState<Record<string, string>>(
-    Object.fromEntries(banners.map(b => [b.id, b.message]))
-  );
+  const [bannerMessages, setBannerMessages] = useState<Record<string, string>>({});
+  const [newBannerMessage, setNewBannerMessage] = useState('');
+  const [newBannerProjectId, setNewBannerProjectId] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  React.useEffect(() => {
+    let isMounted = true;
+
+    Promise.all([bannersApi.list(), projectsApi.list()])
+      .then(([bannerItems, projectItems]) => {
+        if (isMounted) {
+          setBanners(bannerItems);
+          setProjects(projectItems);
+          setBannerMessages(Object.fromEntries(bannerItems.map((banner) => [banner.id, banner.message])));
+          setActiveBannerId(bannerItems[0]?.id || '');
+          setNewBannerProjectId(projectItems[0]?.id || '');
+        }
+      })
+      .catch((err) => {
+        if (isMounted) {
+          setError(getApiErrorMessage(err, 'Unable to load banners.'));
+        }
+      })
+      .finally(() => {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleMessageChange = (id: string, newMessage: string) => {
     setBannerMessages(prev => ({ ...prev, [id]: newMessage }));
   };
 
   const filteredBanners = banners.filter(banner => 
-    banner.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    bannerName(banner).toLowerCase().includes(searchQuery.toLowerCase()) ||
     (bannerMessages[banner.id] || banner.message).toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const activeBanner = banners.find(b => b.id === activeBannerId) || banners[0];
-  const activeMessage = bannerMessages[activeBannerId] || activeBanner.message;
+  const activeBanner = banners.find(b => b.id === activeBannerId);
+  const activeMessage = activeBanner ? bannerMessages[activeBannerId] || activeBanner.message : '';
+
+  const createBanner = async () => {
+    if (!newBannerProjectId || !newBannerMessage) {
+      setError('Choose a project and enter a banner message.');
+      return;
+    }
+
+    setIsSaving(true);
+    setError('');
+
+    try {
+      const banner = await bannersApi.create({ projectId: newBannerProjectId, message: newBannerMessage });
+      setBanners((items) => [banner, ...items]);
+      setBannerMessages((messages) => ({ ...messages, [banner.id]: banner.message }));
+      setActiveBannerId(banner.id);
+      setNewBannerMessage('');
+      setIsNewBannerOpen(false);
+    } catch (err) {
+      setError(getApiErrorMessage(err, 'Unable to create banner.'));
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const updateActiveBanner = async () => {
+    if (!activeBanner) {
+      return;
+    }
+
+    setIsSaving(true);
+    setError('');
+
+    try {
+      const updated = await bannersApi.update(activeBanner.id, { message: activeMessage });
+      setBanners((items) => items.map((banner) => banner.id === updated.id ? updated : banner));
+      setBannerMessages((messages) => ({ ...messages, [updated.id]: updated.message }));
+    } catch (err) {
+      setError(getApiErrorMessage(err, 'Unable to update banner.'));
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const toggleBanner = async (checked: boolean) => {
+    if (!activeBanner) {
+      return;
+    }
+
+    setBanners((items) => items.map((banner) => banner.id === activeBanner.id ? { ...banner, isActive: checked } : banner));
+
+    try {
+      const updated = await bannersApi.update(activeBanner.id, { isActive: checked });
+      setBanners((items) => items.map((banner) => banner.id === updated.id ? updated : banner));
+    } catch (err) {
+      setBanners((items) => items.map((banner) => banner.id === activeBanner.id ? activeBanner : banner));
+      setError(getApiErrorMessage(err, 'Unable to update banner.'));
+    }
+  };
 
   return (
     <div className="space-y-6 md:space-y-8">
@@ -37,6 +132,8 @@ export const Banners: React.FC = () => {
         </Button>
       </div>
 
+      {error && <p className="rounded-md border border-red-100 bg-red-50 px-3 py-2 text-[12px] font-medium text-red-700">{error}</p>}
+
       <Dialog 
         isOpen={isNewBannerOpen} 
         onClose={() => setIsNewBannerOpen(false)} 
@@ -44,14 +141,16 @@ export const Banners: React.FC = () => {
       >
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <label className="text-[10px] md:text-[11px] font-bold uppercase tracking-widest text-neutral-400">Banner Name</label>
-            <Input placeholder="e.g., Summer Promotion" />
+            <label className="text-[10px] md:text-[11px] font-bold uppercase tracking-widest text-neutral-400">Project</label>
+            <select className="h-10 w-full rounded-md border border-border bg-transparent px-3 py-2 text-[13px] focus:outline-none focus:border-black" value={newBannerProjectId} onChange={(event) => setNewBannerProjectId(event.target.value)}>
+              {projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
+            </select>
           </div>
           <div className="space-y-1.5">
             <label className="text-[10px] md:text-[11px] font-bold uppercase tracking-widest text-neutral-400">Message Content</label>
-            <textarea className="w-full h-24 border border-border rounded-lg p-3 text-[13px] focus:outline-none focus:border-black resize-none" placeholder="Enter banner text..." />
+            <textarea className="w-full h-24 border border-border rounded-lg p-3 text-[13px] focus:outline-none focus:border-black resize-none" placeholder="Enter banner text..." value={newBannerMessage} onChange={(event) => setNewBannerMessage(event.target.value)} />
           </div>
-          <Button className="w-full mt-4" onClick={() => setIsNewBannerOpen(false)}>Create banner</Button>
+          <Button className="w-full mt-4" onClick={createBanner} isLoading={isSaving} disabled={isSaving}>Create banner</Button>
         </div>
       </Dialog>
 
@@ -70,8 +169,17 @@ export const Banners: React.FC = () => {
                       onChange={(e) => setSearchQuery(e.target.value)}
                    />
                 </div>
-             </div>
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-2">
+              {isLoading && Array.from({ length: 3 }).map((_, index) => (
+                <div key={index} className="w-full p-4 border border-border rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <Skeleton width={110} height={14} />
+                    <Skeleton width={56} height={20} borderRadius={999} />
+                  </div>
+                  <Skeleton width="80%" height={12} />
+                </div>
+              ))}
               {filteredBanners.map((banner) => (
                 <button
                   key={banner.id}
@@ -84,18 +192,33 @@ export const Banners: React.FC = () => {
                 >
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <div className={`w-1.5 h-1.5 rounded-full ${banner.enabled ? 'bg-green-500' : 'bg-neutral-300'}`} />
-                      <span className="text-[12px] font-bold">{banner.name}</span>
+                      <div className={`w-1.5 h-1.5 rounded-full ${banner.isActive ? 'bg-green-500' : 'bg-neutral-300'}`} />
+                      <span className="text-[12px] font-bold">{bannerName(banner)}</span>
                     </div>
                     <Badge>{banner.position}</Badge>
                   </div>
                   <p className="text-[11px] text-neutral-500 line-clamp-1">{bannerMessages[banner.id] || banner.message}</p>
                 </button>
               ))}
+              {!isLoading && filteredBanners.length === 0 && (
+                <div className="rounded-lg border border-dashed border-neutral-200 px-4 py-8 text-center">
+                  <h3 className="text-sm font-bold text-black">No banners found</h3>
+                  <p className="mt-1 text-[12px] text-neutral-500">Create a banner and it will appear here.</p>
+                </div>
+              )}
             </div>
           </div>
 
           <Card title="Quick Edit">
+            {isLoading ? (
+              <div className="space-y-4">
+                <Skeleton height={96} borderRadius={8} />
+                <div className="pt-4 flex items-center justify-between gap-4 border-t border-border mt-4">
+                  <Skeleton width={86} height={18} />
+                  <Skeleton width={76} height={34} borderRadius={6} />
+                </div>
+              </div>
+            ) : (
             <div className="space-y-4">
               <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">Message</label>
@@ -107,10 +230,11 @@ export const Banners: React.FC = () => {
                 />
               </div>
               <div className="pt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-t border-border mt-4">
-                <Switch label="Active" checked={activeBanner.enabled} />
-                <Button size="sm" className="w-full sm:w-auto">Update</Button>
+                <Switch label="Active" checked={activeBanner?.isActive || false} onChange={toggleBanner} />
+                <Button size="sm" className="w-full sm:w-auto" onClick={updateActiveBanner} isLoading={isSaving} disabled={!activeBanner || isSaving}>Update</Button>
               </div>
             </div>
+            )}
           </Card>
         </div>
 
@@ -134,12 +258,12 @@ export const Banners: React.FC = () => {
                       <div className="w-2 h-2 md:w-2.5 md:h-2.5 rounded-full bg-neutral-200" />
                    </div>
                    <div className="flex-1 h-5 md:h-6 bg-neutral-50 border border-border rounded text-[9px] md:text-[10px] flex items-center px-2 md:px-3 text-neutral-400 font-mono truncate">
-                      https://client-site.com{activeBanner.targetPage}
+                      https://client-site.com{activeBanner?.pathPattern || '*'}
                    </div>
                 </div>
 
                 {/* Banner Injection Simulation */}
-                {activeBanner.position === 'top' && (
+                {activeBanner?.position === 'top' && (
                   <motion.div 
                     initial={{ y: -10, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
@@ -161,7 +285,7 @@ export const Banners: React.FC = () => {
                    </div>
                 </div>
 
-                {activeBanner.position === 'bottom' && (
+                {activeBanner?.position === 'bottom' && (
                    <motion.div 
                      initial={{ y: 10, opacity: 0 }}
                      animate={{ y: 0, opacity: 1 }}
@@ -169,7 +293,7 @@ export const Banners: React.FC = () => {
                    >
                      <div className="flex items-center gap-3 text-sm">
                         <MessageSquare size={16} className="text-black" />
-                        <span className="font-medium text-xs">{activeBanner.message}</span>
+                        <span className="font-medium text-xs">{activeMessage}</span>
                      </div>
                      <Button size="sm" className="h-7 text-[10px] px-3">Learn More</Button>
                    </motion.div>
@@ -179,7 +303,7 @@ export const Banners: React.FC = () => {
               {/* Annotation */}
               <div className="absolute bottom-6 right-6 flex items-center gap-2 px-3 py-1.5 bg-black text-white rounded-full text-[10px] font-bold uppercase tracking-widest shadow-premium">
                  <ArrowRight size={12} />
-                 Position: {activeBanner.position}
+                 Position: {activeBanner?.position || 'top'}
               </div>
            </div>
         </div>

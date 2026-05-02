@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { Card, Button } from '../../../components/ui';
+import Skeleton from 'react-loading-skeleton';
 import { 
   Terminal, 
-  Layers, 
-  ShieldCheck
+  Layers
 } from 'lucide-react';
-import { DEMO_PROJECT_KEY, VIEWCONTROL_API_URL, VIEWCONTROL_CDN_URL } from '../../../lib/viewcontrol';
+import { VIEWCONTROL_API_URL, VIEWCONTROL_CDN_URL } from '../../../lib/viewcontrol';
+import { ApiProject, getApiErrorMessage, projectsApi } from '../../../lib/api';
 
 const CodeSnippet = ({ code, language }: { code: string, language: string }) => {
   const [copied, setCopied] = useState(false);
@@ -35,6 +35,40 @@ const CodeSnippet = ({ code, language }: { code: string, language: string }) => 
 };
 
 export const Install: React.FC = () => {
+  const [projects, setProjects] = React.useState<ApiProject[]>([]);
+  const [selectedProjectId, setSelectedProjectId] = React.useState('');
+  const [error, setError] = React.useState('');
+  const [isLoading, setIsLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    let isMounted = true;
+
+    projectsApi.list()
+      .then((items) => {
+        if (isMounted) {
+          setProjects(items);
+          setSelectedProjectId(items[0]?.id || '');
+        }
+      })
+      .catch((err) => {
+        if (isMounted) {
+          setError(getApiErrorMessage(err, 'Unable to load projects.'));
+        }
+      })
+      .finally(() => {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const selectedProject = projects.find((project) => project.id === selectedProjectId);
+  const projectKey = selectedProject?.projectKey || 'PROJECT_KEY';
+
   return (
     <div className="space-y-6 md:space-y-8 max-w-4xl">
       <div>
@@ -42,8 +76,32 @@ export const Install: React.FC = () => {
         <p className="text-neutral-500 text-[12px] md:text-sm mt-1">Add the ViewControl runtime to your application to start controlling visibility.</p>
       </div>
 
+      {error && <p className="rounded-md border border-red-100 bg-red-50 px-3 py-2 text-[12px] font-medium text-red-700">{error}</p>}
+
+      {isLoading ? (
+        <div className="max-w-sm">
+          <Skeleton height={10} width={70} className="mb-2" />
+          <Skeleton height={40} borderRadius={6} />
+        </div>
+      ) : (
+        <div className="space-y-1.5 max-w-sm">
+          <label className="text-[10px] md:text-[11px] font-bold uppercase tracking-widest text-neutral-400">Project</label>
+          <select
+            className="h-10 w-full rounded-md border border-border bg-transparent px-3 py-2 text-[13px] focus:outline-none focus:border-black"
+            value={selectedProjectId}
+            onChange={(event) => setSelectedProjectId(event.target.value)}
+            disabled={projects.length === 0}
+          >
+            {projects.length === 0 ? (
+              <option value="">No projects yet</option>
+            ) : (
+              projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)
+            )}
+          </select>
+        </div>
+      )}
+
       <div className="space-y-8 md:space-y-12">
-        {/* Method 1: CDN */}
         <section className="space-y-4">
           <div className="flex items-center gap-3">
              <div className="w-8 h-8 rounded bg-neutral-100 border border-border flex items-center justify-center">
@@ -56,11 +114,10 @@ export const Install: React.FC = () => {
           </p>
           <CodeSnippet 
             language="HTML/Javascript"
-            code={`<script\n  src="${VIEWCONTROL_CDN_URL}"\n  data-project-id="${DEMO_PROJECT_KEY}"\n  data-api-url="${VIEWCONTROL_API_URL}"\n  async\n></script>`} 
+            code={`<script\n  src="${VIEWCONTROL_CDN_URL}"\n  data-project-id="${projectKey}"\n  data-api-url="${VIEWCONTROL_API_URL}"\n  async\n></script>`} 
           />
         </section>
 
-        {/* Method 2: NPM */}
         <section className="space-y-4">
           <div className="flex items-center gap-3">
              <div className="w-8 h-8 rounded bg-neutral-100 border border-border flex items-center justify-center">
@@ -75,33 +132,10 @@ export const Install: React.FC = () => {
             <CodeSnippet language="Terminal" code="npm install @viewcontrol/runtime" />
             <CodeSnippet 
               language="TypeScript / Javascript" 
-              code={`import { init } from '@viewcontrol/runtime';\n\ninit({\n  projectId: '${DEMO_PROJECT_KEY}',\n  apiUrl: '${VIEWCONTROL_API_URL}',\n  debug: import.meta.env.DEV\n});`} 
+              code={`import { init } from '@viewcontrol/runtime';\n\ninit({\n  projectId: '${projectKey}',\n  apiUrl: '${VIEWCONTROL_API_URL}',\n  debug: import.meta.env.DEV\n});`} 
             />
           </div>
         </section>
-
-        {/* Integration Check */}
-        <Card className="bg-neutral-50/50 border-neutral-200">
-           <div className="flex flex-col md:flex-row gap-6 md:items-center">
-              <div className="flex-1 space-y-2">
-                 <h3 className="text-sm md:text-base font-bold flex items-center gap-2">
-                    <ShieldCheck size={18} className="text-green-600" />
-                    Integration Status
-                 </h3>
-                 <p className="text-[11px] md:text-xs text-neutral-500 leading-relaxed">
-                    Once installed, our servers will attempt to handshake with your domain. 
-                    Your installed runtime will request controls from <code className="text-black font-mono">{VIEWCONTROL_API_URL}</code>.
-                 </p>
-              </div>
-              <div className="flex items-center justify-between md:justify-end gap-3 w-full md:w-auto">
-                 <div className="text-left md:text-right">
-                    <p className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-neutral-400">Current Health</p>
-                    <p className="text-[11px] md:text-xs font-bold text-green-600">Awaiting Signal...</p>
-                 </div>
-                 <Button variant="outline" className="h-9 md:h-10 text-[12px] md:text-sm">Run Debugger</Button>
-              </div>
-           </div>
-        </Card>
       </div>
     </div>
   );

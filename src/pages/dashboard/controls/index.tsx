@@ -1,35 +1,84 @@
 import React, { useState } from 'react';
-import { Card, Button, Input, Switch, Badge, Dialog, useToast } from '../../../components/ui';
+import Skeleton from 'react-loading-skeleton';
+import { Card, Button, Input, Switch, Dialog, useToast } from '../../../components/ui';
 import { cn } from '../../../lib/utils';
 import { 
   Zap, 
-  ChevronRight, 
-  Link as LinkIcon, 
   MousePointer2, 
   EyeOff, 
   Eye, 
   Type, 
   Layers,
-  Save,
-  Play
+  Save
 } from 'lucide-react';
-import { projects } from '../../../lib/data';
 import { motion } from 'motion/react';
+import { ApiControl, ApiProject, controlsApi, getApiErrorMessage, projectsApi } from '../../../lib/api';
 
 export const Controls: React.FC = () => {
   const toast = useToast();
-  const [selectedProjectId, setSelectedProjectId] = useState(projects[0].id);
+  const [projects, setProjects] = useState<ApiProject[]>([]);
+  const [selectedProjectId, setSelectedProjectId] = useState('');
   const [activeTab, setActiveTab] = useState<'build' | 'preview'>('build');
-  const [selectedAction, setSelectedAction] = useState('hide');
+  const [selectedAction, setSelectedAction] = useState<ApiControl['action']>('hide');
+  const [ruleName, setRuleName] = useState('');
+  const [selector, setSelector] = useState('');
+  const [pathPattern, setPathPattern] = useState('*');
+  const [value, setValue] = useState('');
+  const [isActiveInstantly, setIsActiveInstantly] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoadingProjects, setIsLoadingProjects] = useState(true);
   const [isNewControlOpen, setIsNewControlOpen] = useState(false);
 
-  const handleSave = () => {
+  React.useEffect(() => {
+    let isMounted = true;
+
+    projectsApi.list()
+      .then((items) => {
+        if (isMounted) {
+          setProjects(items);
+          setSelectedProjectId((current) => current || items[0]?.id || '');
+        }
+      })
+      .catch((err) => toast.error('Unable to load projects', getApiErrorMessage(err)))
+      .finally(() => {
+        if (isMounted) {
+          setIsLoadingProjects(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [toast]);
+
+  const handleSave = async () => {
+    if (!selectedProjectId || !ruleName || !selector) {
+      toast.warning('Missing control details', 'Choose a project, name the rule, and add a selector.');
+      return;
+    }
+
     setIsSaving(true);
-    setTimeout(() => {
-      setIsSaving(false);
+
+    try {
+      await controlsApi.create({
+        projectId: selectedProjectId,
+        name: ruleName,
+        selector,
+        action: selectedAction,
+        pathPattern: pathPattern || '*',
+        value: value || null,
+        isActive: isActiveInstantly,
+      });
+      setRuleName('');
+      setSelector('');
+      setPathPattern('*');
+      setValue('');
       toast.success('Control rule saved', 'Your visibility rule is active on the selected project.');
-    }, 1000);
+    } catch (err) {
+      toast.error('Unable to save control', getApiErrorMessage(err));
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -50,13 +99,13 @@ export const Controls: React.FC = () => {
         <div className="space-y-4">
           <div className="space-y-1.5">
             <label className="text-[10px] md:text-[11px] font-bold uppercase tracking-widest text-neutral-400">Rule Name</label>
-            <Input placeholder="e.g., Hide Pricing Banner" />
+            <Input placeholder="e.g., Hide Pricing Banner" value={ruleName} onChange={(event) => setRuleName(event.target.value)} />
           </div>
           <div className="space-y-1.5">
             <label className="text-[10px] md:text-[11px] font-bold uppercase tracking-widest text-neutral-400">Target Selector</label>
-            <Input placeholder=".hero-banner" className="font-mono" />
+            <Input placeholder=".hero-banner" className="font-mono" value={selector} onChange={(event) => setSelector(event.target.value)} />
           </div>
-          <Button className="w-full mt-4" onClick={() => setIsNewControlOpen(false)}>Create Rule</Button>
+          <Button className="w-full mt-4" onClick={() => setIsNewControlOpen(false)}>Use Details</Button>
         </div>
       </Dialog>
 
@@ -68,6 +117,12 @@ export const Controls: React.FC = () => {
               <div className="space-y-3">
                 <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-neutral-400">Target Project</label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {isLoadingProjects && Array.from({ length: 2 }).map((_, index) => (
+                    <div key={index} className="p-3 border border-border rounded-lg">
+                      <Skeleton width="55%" height={14} />
+                      <Skeleton width="70%" height={11} className="mt-2" />
+                    </div>
+                  ))}
                   {projects.slice(0, 2).map((p) => (
                     <button
                       key={p.id}
@@ -84,6 +139,7 @@ export const Controls: React.FC = () => {
                     </button>
                   ))}
                 </div>
+                {!isLoadingProjects && projects.length === 0 && <p className="text-[12px] text-neutral-500">Create a project before saving controls.</p>}
               </div>
 
               <div className="space-y-3">
@@ -94,6 +150,8 @@ export const Controls: React.FC = () => {
                     type="text" 
                     placeholder="e.g. pricing, blog/*" 
                     className="flex-1 bg-transparent border-none outline-none pl-1 text-[13px] md:text-sm font-mono"
+                    value={pathPattern === '*' ? '' : pathPattern.replace(/^\//, '')}
+                    onChange={(event) => setPathPattern(event.target.value ? `/${event.target.value.replace(/^\//, '')}` : '*')}
                   />
                 </div>
               </div>
@@ -101,7 +159,7 @@ export const Controls: React.FC = () => {
               <div className="space-y-3">
                 <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-neutral-400">CSS Selector</label>
                 <div className="relative">
-                  <Input placeholder=".hero-title, #cta-button" className="font-mono pl-9 text-[13px] md:text-sm" />
+                  <Input placeholder=".hero-title, #cta-button" className="font-mono pl-9 text-[13px] md:text-sm" value={selector} onChange={(event) => setSelector(event.target.value)} />
                   <MousePointer2 className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" size={14} />
                 </div>
               </div>
@@ -109,14 +167,14 @@ export const Controls: React.FC = () => {
               <div className="space-y-3">
                 <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-neutral-400">Action</label>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {[
+                  {([
                     { id: 'hide', icon: EyeOff, label: 'Hide' },
                     { id: 'show', icon: Eye, label: 'Show' },
                     { id: 'opacity', icon: Layers, label: 'Opacity' },
                     { id: 'text', icon: Type, label: 'Add Text' },
                     { id: 'replace', icon: Type, label: 'Replace' },
                     { id: 'display', icon: Zap, label: 'Display' },
-                  ].map((action) => (
+                  ] as Array<{ id: ApiControl['action']; icon: React.ElementType; label: string }>).map((action) => (
                     <button 
                       key={action.id} 
                       onClick={() => setSelectedAction(action.id)}
@@ -132,8 +190,15 @@ export const Controls: React.FC = () => {
                 </div>
               </div>
 
+              {['text', 'replace', 'opacity', 'display'].includes(selectedAction) && (
+                <div className="space-y-3">
+                  <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-neutral-400">Value</label>
+                  <Input placeholder="Replacement text, opacity, or display value" value={value} onChange={(event) => setValue(event.target.value)} />
+                </div>
+              )}
+
               <div className="pt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-t border-border mt-6 md:mt-8">
-                <Switch label="Active instantly on save" checked={true} />
+                <Switch label="Active instantly on save" checked={isActiveInstantly} onChange={setIsActiveInstantly} />
                 <Button className="h-10 px-8 w-full sm:w-auto" onClick={handleSave} isLoading={isSaving}>
                   {!isSaving && <Save size={14} className="mr-2" />}
                   {isSaving ? 'Saving...' : 'Save Rule'}
@@ -199,30 +264,7 @@ export const Controls: React.FC = () => {
                     </div>
                   </motion.div>
                </div>
-
-               <div className="p-4 border-t border-border bg-white">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">Real-time Log</p>
-                    <Badge>Connected</Badge>
-                  </div>
-                  <div className="space-y-1.5">
-                    <div className="flex items-center gap-2 text-[10px] font-mono text-neutral-500">
-                      <ChevronRight size={10} /> Finding selector: .hero-title
-                    </div>
-                    <div className="flex items-center gap-2 text-[10px] font-mono text-neutral-500">
-                      <ChevronRight size={10} /> Mutation observed...
-                    </div>
-                    <div className="flex items-center gap-2 text-[10px] font-mono text-black font-bold">
-                      <ChevronRight size={10} /> ACTION APPLIED: HIDE (.hero-title)
-                    </div>
-                  </div>
-               </div>
             </Card>
-
-            <Button variant="outline" className="w-full text-xs">
-              <Play size={12} className="mr-2" />
-              Test on Live Instance
-            </Button>
           </div>
         </div>
       </div>

@@ -1,4 +1,4 @@
-import { Project, ControlRule, Banner, ActivityLog } from '../types';
+import { Project, ControlRule, Banner } from '../types';
 
 export const projects: Project[] = [
   {
@@ -80,32 +80,5 @@ export const banners: Banner[] = [
     targetPage: '/pricing',
     enabled: false,
     projectId: 'p2',
-  },
-];
-
-export const activities: ActivityLog[] = [
-  {
-    id: 'a1',
-    timestamp: '2024-03-20T16:45:00Z',
-    message: 'Text replaced on #hero-title (Marketing Site)',
-    type: 'rule',
-  },
-  {
-    id: 'a2',
-    timestamp: '2024-03-20T15:30:00Z',
-    message: 'Maintenance Notice banner enabled (Main Application)',
-    type: 'banner',
-  },
-  {
-    id: 'a3',
-    timestamp: '2024-03-20T14:20:00Z',
-    message: 'Beta badge rule toggled off (Main Application)',
-    type: 'rule',
-  },
-  {
-    id: 'a4',
-    timestamp: '2024-03-20T12:00:00Z',
-    message: 'New project "Documentation" added',
-    type: 'system',
   },
 ];

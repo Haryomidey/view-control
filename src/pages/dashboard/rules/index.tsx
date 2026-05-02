@@ -1,9 +1,10 @@
 import React from 'react';
+import Skeleton from 'react-loading-skeleton';
 import { Link } from 'react-router-dom';
 import { Card, Button, Input, Switch, Badge } from '../../../components/ui';
 import { Search, Filter, MoreHorizontal, Terminal, Zap, Layers, Type, EyeOff } from 'lucide-react';
-import { rules } from '../../../lib/data';
 import { motion } from 'motion/react';
+import { ApiControl, getApiErrorMessage, controlsApi, projectsApi } from '../../../lib/api';
 
 const ActionIcon = ({ type }: { type: string }) => {
   switch (type) {
@@ -17,11 +18,53 @@ const ActionIcon = ({ type }: { type: string }) => {
 
 export const Rules: React.FC = () => {
   const [searchQuery, setSearchQuery] = React.useState("");
+  const [rules, setRules] = React.useState<ApiControl[]>([]);
+  const [projectNames, setProjectNames] = React.useState<Record<string, string>>({});
+  const [error, setError] = React.useState('');
+  const [isLoading, setIsLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    let isMounted = true;
+
+    Promise.all([controlsApi.list(), projectsApi.list()])
+      .then(([controls, projects]) => {
+        if (isMounted) {
+          setRules(controls);
+          setProjectNames(Object.fromEntries(projects.map((project) => [project.id, project.name])));
+        }
+      })
+      .catch((err) => {
+        if (isMounted) {
+          setError(getApiErrorMessage(err, 'Unable to load controls.'));
+        }
+      })
+      .finally(() => {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const toggleRule = async (rule: ApiControl, checked: boolean) => {
+    setRules((items) => items.map((item) => item.id === rule.id ? { ...item, isActive: checked } : item));
+
+    try {
+      const updated = await controlsApi.update(rule.id, { isActive: checked });
+      setRules((items) => items.map((item) => item.id === updated.id ? updated : item));
+    } catch (err) {
+      setRules((items) => items.map((item) => item.id === rule.id ? rule : item));
+      setError(getApiErrorMessage(err, 'Unable to update control.'));
+    }
+  };
 
   const filteredRules = rules.filter(rule => 
     rule.selector.toLowerCase().includes(searchQuery.toLowerCase()) ||
     rule.action.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    rule.path.toLowerCase().includes(searchQuery.toLowerCase())
+    rule.pathPattern.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -50,6 +93,7 @@ export const Rules: React.FC = () => {
         </div>
       </div>
 
+      {error && <p className="rounded-md border border-red-100 bg-red-50 px-3 py-2 text-[12px] font-medium text-red-700">{error}</p>}
       <div className="border border-border rounded-lg overflow-hidden bg-white">
         <div className="overflow-x-auto scrollbar-hide">
           <table className="w-full text-left border-collapse min-w-175">
@@ -64,6 +108,24 @@ export const Rules: React.FC = () => {
               </tr>
             </thead>
             <tbody>
+              {isLoading && Array.from({ length: 5 }).map((_, index) => (
+                <tr key={index} className="border-b border-neutral-50 last:border-0">
+                  <td className="px-4 md:px-5 py-3 md:py-4"><Skeleton width={150} height={16} /></td>
+                  <td className="px-4 md:px-5 py-3 md:py-4"><Skeleton width={90} height={16} /></td>
+                  <td className="px-4 md:px-5 py-3 md:py-4"><Skeleton width={110} height={16} /></td>
+                  <td className="px-4 md:px-5 py-3 md:py-4"><Skeleton width={32} height={18} borderRadius={999} /></td>
+                  <td className="px-4 md:px-5 py-3 md:py-4"><Skeleton width={80} height={16} /></td>
+                  <td className="px-4 md:px-5 py-3 md:py-4"><Skeleton width={16} height={16} /></td>
+                </tr>
+              ))}
+              {!isLoading && filteredRules.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-4 py-10 text-center md:px-5">
+                    <h3 className="text-sm font-bold text-black">No controls found</h3>
+                    <p className="mt-1 text-[12px] text-neutral-500">Create a control rule and it will appear in this table.</p>
+                  </td>
+                </tr>
+              )}
               {filteredRules.map((rule, i) => (
                 <motion.tr 
                   initial={{ opacity: 0 }}
@@ -74,18 +136,19 @@ export const Rules: React.FC = () => {
                 >
                   <td className="px-4 md:px-5 py-3 md:py-4">
                     <code className="text-[12px] md:text-[13px] font-mono text-black">{rule.selector}</code>
+                    <p className="text-[10px] text-neutral-400 mt-1">{projectNames[rule.projectId] || 'Project'}</p>
                   </td>
                   <td className="px-4 md:px-5 py-3 md:py-4">
                     <span className="text-[12px] md:text-[13px] font-medium text-neutral-900">{rule.action.replace('_', ' ')}</span>
                   </td>
                   <td className="px-4 md:px-5 py-3 md:py-4">
-                    <code className="text-[11px] md:text-[13px] font-mono text-neutral-500">{rule.path}</code>
+                    <code className="text-[11px] md:text-[13px] font-mono text-neutral-500">{rule.pathPattern}</code>
                   </td>
                   <td className="px-4 md:px-5 py-3 md:py-4">
-                    <Switch checked={rule.enabled} />
+                    <Switch checked={rule.isActive} onChange={(checked) => toggleRule(rule, checked)} />
                   </td>
                   <td className="px-4 md:px-5 py-3 md:py-4 text-[11px] md:text-[13px] text-neutral-400">
-                    {rule.lastUpdated}
+                    {new Date(rule.updatedAt).toLocaleDateString()}
                   </td>
                   <td className="px-4 md:px-5 py-2 md:py-4 text-right">
                     <button className="text-neutral-300 hover:text-black transition-colors p-1">
